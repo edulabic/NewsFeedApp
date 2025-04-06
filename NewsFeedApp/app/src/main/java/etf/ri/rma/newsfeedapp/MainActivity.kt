@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             NewsFeedAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android App",
+                        name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
