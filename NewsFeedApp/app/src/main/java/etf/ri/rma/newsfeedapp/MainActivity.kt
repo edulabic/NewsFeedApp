@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import etf.ri.rma.newsfeedapp.screen.NewsFeedScreen
 import etf.ri.rma.newsfeedapp.ui.theme.NewsFeedAppTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +21,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NewsFeedAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                NewsFeedScreen()
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+
+
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    NewsFeedAppTheme {
-        Greeting("Android")
+NewsFeedAppTheme {
+    NewsFeedScreen()
     }
 }
