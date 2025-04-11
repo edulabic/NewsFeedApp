@@ -33,7 +33,7 @@ object NewsData {
                 imageUrl=null,
                 category="Sport",
                 isFeatured=true,
-                source="tenis.ba",
+                source="sport.ba",
                 publishedDate="15.1.2025"
             ),
             NewsItem(

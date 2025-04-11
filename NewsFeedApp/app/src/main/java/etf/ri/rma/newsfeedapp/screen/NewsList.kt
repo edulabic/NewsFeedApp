@@ -2,6 +2,7 @@ package etf.ri.rma.newsfeedapp.screen
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -10,9 +11,9 @@ import etf.ri.rma.newsfeedapp.screen.MessageCard
 import etf.ri.rma.newsfeedapp.screen.StandardNewsCard
 import etf.ri.rma.newsfeedapp.screen.FeaturedNewsCard
 @Composable
-fun NewsList(newsItems : List<NewsItem>){
+fun NewsList(newsItems : List<NewsItem>, chosenCategory: String){
     if(newsItems.isEmpty()){
-        MessageCard()
+        MessageCard(chosenCategory)
     }
     else {
         LazyColumn(modifier = Modifier.testTag("news_list")) {
@@ -25,5 +26,4 @@ fun NewsList(newsItems : List<NewsItem>){
             }
         }
     }
-
 }

@@ -3,6 +3,7 @@ package etf.ri.rma.newsfeedapp.screen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.FilterChip
@@ -30,7 +31,7 @@ fun NewsFeedScreen(){
     }
     Column(modifier= Modifier.fillMaxSize().padding(16.dp)){
         FilterChips(chosenCategory=chosenCategory, onCategoryChosen={ chosenCategory = it })
-    NewsList(newsItems = filteredNews)}
+        NewsList(newsItems = filteredNews, chosenCategory=chosenCategory)}
 }
 
 
@@ -38,7 +39,6 @@ fun NewsFeedScreen(){
 fun FilterChips(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
     val categories = listOf("Sve", "Politika", "Sport", "Nauka/tehnologija", "Kultura")
     val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_cul")
-
     LazyRow(modifier = Modifier.padding(8.dp)) {
         itemsIndexed(categories) { index, category ->
             FilterChip(
