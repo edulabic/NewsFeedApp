@@ -12,11 +12,12 @@ import etf.ri.rma.newsfeedapp.screen.StandardNewsCard
 import etf.ri.rma.newsfeedapp.screen.FeaturedNewsCard
 @Composable
 fun NewsList(newsItems : List<NewsItem>, chosenCategory: String){
-    if(newsItems.isEmpty()){
-        MessageCard(chosenCategory)
-    }
-    else {
-        LazyColumn(modifier = Modifier.testTag("news_list")) {
+    LazyColumn(modifier = Modifier.testTag("news_list")) {
+        if (newsItems.isEmpty()) {
+            item {
+                MessageCard(chosenCategory)
+            }
+        } else {
             items(newsItems, key = { it.id }) { newsItem ->
                 if (newsItem.isFeatured) {
                     FeaturedNewsCard(newsItem)
