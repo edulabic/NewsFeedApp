@@ -36,20 +36,22 @@ fun FeaturedNewsCard(newsItem: NewsItem) {
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Column {
             Image(
                 painter = painterResource(id = R.drawable.news_image),
-                contentDescription = null,
+                contentDescription = "News image",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp),
+                    .height(150.dp)
+                    .padding(start=8.dp, end=8.dp),
                 contentScale = ContentScale.Crop
             )
             Column(modifier = Modifier.padding(8.dp)) {
-                Text(newsItem.title, fontWeight = FontWeight.Bold)
-                Text(newsItem.snippet, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(newsItem.title, maxLines=2, fontWeight = FontWeight.Bold)
+                Text(newsItem.snippet, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
                     "${newsItem.source} • ${newsItem.publishedDate}",
                     style = MaterialTheme.typography.bodySmall

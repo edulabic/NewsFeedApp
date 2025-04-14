@@ -1,6 +1,8 @@
 package etf.ri.rma.newsfeedapp.screen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,12 +37,13 @@ fun NewsFeedScreen(){
 }
 
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterChips(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
     val categories = listOf("Sve", "Politika", "Sport", "Nauka/tehnologija", "Kultura")
-    val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_cul")
-    LazyRow(modifier = Modifier.padding(8.dp)) {
-        itemsIndexed(categories) { index, category ->
+    val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_none")
+    FlowRow(modifier = Modifier.padding(8.dp)) {
+        categories.forEachIndexed { index, category ->
             FilterChip(
                 selected = chosenCategory == category,
                 onClick = {
@@ -56,5 +59,4 @@ fun FilterChips(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
         }
     }
 }
-
 

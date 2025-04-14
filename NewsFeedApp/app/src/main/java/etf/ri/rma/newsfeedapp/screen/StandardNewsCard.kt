@@ -1,15 +1,12 @@
 package etf.ri.rma.newsfeedapp.screen
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Card
@@ -27,10 +23,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import etf.ri.rma.newsfeedapp.R
-import etf.ri.rma.newsfeedapp.data.NewsData
-import kotlin.math.round
 
 @Composable
 fun StandardNewsCard(newsItem: NewsItem) {
@@ -43,7 +36,7 @@ fun StandardNewsCard(newsItem: NewsItem) {
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
             Image(
-                painter = painterResource(R.drawable.news_imgstandard),
+                painter = painterResource(R.drawable.newss_image),
                 contentDescription = "News image",
                 modifier = Modifier
                     .size(80.dp)
@@ -66,7 +59,7 @@ fun StandardNewsCard(newsItem: NewsItem) {
                 )
                 Text(
                     text = newsItem.snippet,
-                    maxLines = 1,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium
                 )

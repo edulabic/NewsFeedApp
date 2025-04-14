@@ -99,7 +99,7 @@ object NewsData {
             ),
             NewsItem(
                 id="10",
-                title = "Srednjoškolci iz BiH ostvarili značajne rezultate na svjetskom takmičenju iz matematike ",
+                title = "Uspjeh srednjoškolaca na svjetskom takmičenju iz matematike ",
                 snippet = "Uspješni srednjoškolci vratili su se iz Pariza sa 11 osvojenih medalja, čime su osigurali prestižne stipendije za početak studiranja.",
                 imageUrl = null,
                 category = "Nauka/tehnologija",
