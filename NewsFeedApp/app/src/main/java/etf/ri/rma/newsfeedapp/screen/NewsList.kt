@@ -11,8 +11,8 @@ import etf.ri.rma.newsfeedapp.screen.MessageCard
 import etf.ri.rma.newsfeedapp.screen.StandardNewsCard
 import etf.ri.rma.newsfeedapp.screen.FeaturedNewsCard
 @Composable
-fun NewsList(newsItems : List<NewsItem>, chosenCategory: String){
-    LazyColumn(modifier = Modifier.testTag("news_list")) {
+fun NewsList(newsItems : List<NewsItem>, chosenCategory: String, chosenDate: String?){
+    LazyColumn(modifier = Modifier.testTag("news_list").testTag("news_date")) {
         if (newsItems.isEmpty()) {
             item {
                 MessageCard(chosenCategory)

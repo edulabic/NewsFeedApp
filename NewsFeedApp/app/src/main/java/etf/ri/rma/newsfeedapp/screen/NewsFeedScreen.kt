@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import etf.ri.rma.newsfeedapp.data.NewsData
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun NewsFeedScreen(){
@@ -31,11 +33,72 @@ fun NewsFeedScreen(){
         "Kultura" -> newsList.filter {it.category == "Kultura"}
         else -> newsList
     }
+    var chosenDate by remember {mutableStateOf("")}
+    val filteredDate = when (chosenDate) {
+        "U ovom mjesecu" -> filteredNews.filter {
+            val datum = pretvoriUDatum(it.publishedDate)
+            datum.month == LocalDate.now().month && datum.year == LocalDate.now().year
+        }
+        "U ovoj godini" -> filteredNews.filter {
+            val datum = pretvoriUDatum(it.publishedDate)
+            datum.year == LocalDate.now().year
+        }
+        else -> filteredNews
+    }
+
     Column(modifier= Modifier.fillMaxSize().padding(16.dp)){
         FilterChips(chosenCategory=chosenCategory, onCategoryChosen={ chosenCategory = it })
-        NewsList(newsItems = filteredNews, chosenCategory=chosenCategory)}
+        FilterDate(chosenDate = chosenDate, onDateChosen = {chosenDate = it})
+        NewsList(newsItems = filteredDate, chosenCategory=chosenCategory, chosenDate=chosenDate)
+    }
 }
 
+fun pretvoriUDatum(date: String): LocalDate {
+    return LocalDate.parse(date, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+}
+
+
+fun substringDefault(date: String):String {
+    val substring = date.substring(5, 7)
+    return substring
+}
+
+fun substringMonth(date: String):String {
+    val substring = date.substring(3, 5)
+    return substring
+}
+
+fun pretvoriDate(date:String):String {
+    val localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    return localDate.toString()
+}
+
+
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun FilterDate(chosenDate: String, onDateChosen: (String)-> Unit){
+    val options = listOf("U ovom mjesecu", "U ovoj godini")
+    val tags = listOf("filter_chip_date_month", "filter_chip_date_year")
+    FlowRow(modifier = Modifier.padding(16.dp)){
+        options.forEachIndexed { index, option ->
+            FilterChip(
+                selected = chosenDate == option,
+                onClick = {
+                    if(chosenDate != option){
+                        onDateChosen(option)
+                    }
+                },
+                label = { Text(option) },
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .testTag(tags[index])
+            )
+
+        }
+    }
+
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

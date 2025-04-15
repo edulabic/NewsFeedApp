@@ -14,7 +14,7 @@ object NewsData {
                 category = "Sport",
                 isFeatured = true,
                 source = "reprezentacija.ba",
-                publishedDate = "17.2.2025"
+                publishedDate = "17.02.2025"
             ),
             NewsItem(
                 id="2",
@@ -24,7 +24,7 @@ object NewsData {
                 category="Sport",
                 isFeatured = false,
                 source = "sport.ba",
-                publishedDate = "16.1.2025"
+                publishedDate = "16.01.2025"
             ),
             NewsItem(
                 id="3",
@@ -34,7 +34,7 @@ object NewsData {
                 category="Sport",
                 isFeatured=true,
                 source="sport.ba",
-                publishedDate="15.1.2025"
+                publishedDate="15.04.2025"
             ),
             NewsItem(
                 id="4",
@@ -44,7 +44,7 @@ object NewsData {
                 category="Sport",
                 isFeatured=false,
                 source="hercegovinasport.ba",
-                publishedDate="14.1.2025"
+                publishedDate="14.01.2025"
             ),
             NewsItem(
                 id="5",
@@ -54,7 +54,7 @@ object NewsData {
                 category="Sport",
                 isFeatured=true,
                 source="klix.ba",
-                publishedDate="13.3.2025"
+                publishedDate="13.03.2025"
             ),
             NewsItem(
                 id="6",
@@ -64,7 +64,7 @@ object NewsData {
                 category = "Politika",
                 isFeatured = false,
                 source = "klix.ba",
-                publishedDate="13.3.2025"
+                publishedDate="13.03.2025"
 
             ),
             NewsItem(
@@ -75,7 +75,7 @@ object NewsData {
                 category = "Politika",
                 isFeatured = false,
                 source = "klix.ba",
-                publishedDate = "12.4.2025"
+                publishedDate = "15.04.2025"
             ),
             NewsItem(
                 id="8",
@@ -85,7 +85,7 @@ object NewsData {
                 category = "Politika",
                 isFeatured = false,
                 source = "klix.ba",
-                publishedDate = "27.1.2025"
+                publishedDate = "27.01.2025"
             ),
             NewsItem(
                 id="9",
@@ -95,7 +95,7 @@ object NewsData {
                 category = "Politika",
                 isFeatured = true,
                 source = "klix.ba",
-                publishedDate = "3.1.2025"
+                publishedDate = "03.01.2025"
             ),
             NewsItem(
                 id="10",
@@ -105,7 +105,7 @@ object NewsData {
                 category = "Nauka/tehnologija",
                 isFeatured = true,
                 source = "avaz.ba",
-                publishedDate = "24.3.2025"
+                publishedDate = "24.03.2025"
             ),
             NewsItem(
                 id="11",
@@ -115,7 +115,7 @@ object NewsData {
                 category="Nauka/tehnologija",
                 isFeatured=true,
                 source="tehno.ba",
-                publishedDate="17.3.2025"
+                publishedDate="17.03.2025"
             ),
             NewsItem(
                 id="12",
@@ -125,7 +125,7 @@ object NewsData {
                 category="Nauka/tehnologija",
                 isFeatured=false,
                 source="startup.ba",
-                publishedDate="20.1.2025"
+                publishedDate="20.01.2025"
             ),
             NewsItem(
                 id="13",
@@ -135,7 +135,7 @@ object NewsData {
                 category="Nauka/tehnologija",
                 isFeatured=false,
                 source="tehno.ba",
-                publishedDate="5.1.2025"
+                publishedDate="05.01.2024"
             ),
             NewsItem(
                 id="14",
@@ -145,7 +145,7 @@ object NewsData {
                 category="Sport",
                 isFeatured=true,
                 source="sportski.ba",
-                publishedDate="1.4.2025"
+                publishedDate="01.04.2025"
             ),
             NewsItem(
                 id="15",
@@ -155,7 +155,7 @@ object NewsData {
                 category="Sport",
                 isFeatured=true,
                 source="sportskiportal.ba",
-                publishedDate="10.4.2025"
+                publishedDate="10.04.2025"
             ),
             NewsItem(
                 id="16",
@@ -165,7 +165,7 @@ object NewsData {
                 category="Sport",
                 isFeatured=false,
                 source="sportsport.ba",
-                publishedDate="2.1.2025"
+                publishedDate="02.01.2024"
             ),
             NewsItem(
                 id="17",
@@ -175,7 +175,7 @@ object NewsData {
                 category="Politika",
                 isFeatured=false,
                 source="klix.ba",
-                publishedDate="1.2.2025"
+                publishedDate="01.02.2025"
             ),
             NewsItem(
                 id="18",
@@ -185,7 +185,7 @@ object NewsData {
                 category="Nauka/tehnologija",
                 isFeatured=true,
                 source="edukacija.ba",
-                publishedDate="30.1.2025"
+                publishedDate="30.01.2025"
             ),
             NewsItem(
                 id="19",
@@ -195,7 +195,7 @@ object NewsData {
                 category="Nauka/tehnologija",
                 isFeatured=false,
                 source="tehno.ba",
-                publishedDate="15.1.2025"
+                publishedDate="15.01.2025"
             ),
             NewsItem(
                 id="20",
@@ -205,7 +205,7 @@ object NewsData {
                 category="Politika",
                 isFeatured=false,
                 source="klix.ba",
-                publishedDate="28.3.2025"
+                publishedDate="28.03.2024"
             )
         )
     }
