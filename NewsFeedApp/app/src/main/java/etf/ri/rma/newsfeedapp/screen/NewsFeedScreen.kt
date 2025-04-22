@@ -40,8 +40,8 @@ fun NewsFeedScreen(){
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterChips(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
-    val categories = listOf("Sve", "Politika", "Sport", "Nauka/tehnologija", "Kultura")
-    val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_none")
+    val categories = listOf("Sve", "Politika", "Sport", "Nauka/tehnologija", "Kultura", "Više filtera ...")
+    val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_none", "filter_chip_more")
     FlowRow(modifier = Modifier.padding(8.dp)) {
         categories.forEachIndexed { index, category ->
             FilterChip(
