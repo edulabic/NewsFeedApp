@@ -18,36 +18,73 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import etf.ri.rma.newsfeedapp.data.NewsData
-
+import android.icu.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 @Composable
-fun NewsFeedScreen(){
-    var chosenCategory by remember{ mutableStateOf("Sve")}
+fun NewsFeedScreen(navController: NavController) {
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val appliedCategory = savedStateHandle?.get<String>("filter_category")
+    val appliedDateRange = savedStateHandle?.get<String>("filter_date_range")
+
+    var chosenCategory by remember { mutableStateOf(appliedCategory ?: "Sve") }
+
     val newsList = NewsData.getAllNews()
-    val filteredNews = when (chosenCategory){
-        "Politika" -> newsList.filter{it.category =="Politika"}
-        "Sport" -> newsList.filter {it.category == "Sport"}
-        "Nauka/tehnologija" ->newsList.filter{it.category =="Nauka/tehnologija"}
-        "Kultura" -> newsList.filter {it.category == "Kultura"}
+
+    val filteredByCategory = when (chosenCategory) {
+        "Politika" -> newsList.filter { it.category == "Politika" }
+        "Sport" -> newsList.filter { it.category == "Sport" }
+        "Nauka/tehnologija" -> newsList.filter { it.category == "Nauka/tehnologija" }
+        "Kultura" -> newsList.filter { it.category == "Kultura" }
         else -> newsList
     }
-    Column(modifier= Modifier.fillMaxSize().padding(16.dp)){
-        FilterChips(chosenCategory=chosenCategory, onCategoryChosen={ chosenCategory = it })
-        NewsList(newsItems = filteredNews, chosenCategory=chosenCategory)}
-}
 
+    val filteredNews = appliedDateRange?.takeIf { it.contains(";") }?.let { range ->
+        val (startStr, endStr) = range.split(";")
+        val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val startDate = formatter.parse(startStr)
+        val endDate = formatter.parse(endStr)
+        filteredByCategory.filter {
+            val newsDate = formatter.parse(it.publishedDate)
+            newsDate != null && startDate != null && endDate != null &&
+                    !newsDate.before(startDate) && !newsDate.after(endDate)
+        }
+    } ?: filteredByCategory
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        FilterChips(
+            navController = navController,
+            chosenCategory = chosenCategory,
+            onCategoryChosen = {
+                chosenCategory = it
+                savedStateHandle?.remove<String>("filter_category")
+                savedStateHandle?.remove<String>("filter_date_range")
+            }
+        )
+        NewsList(newsItems = filteredNews, chosenCategory = chosenCategory)
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FilterChips(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
+fun FilterChips(
+    navController: NavController,
+    chosenCategory: String,
+    onCategoryChosen: (String) -> Unit
+) {
     val categories = listOf("Sve", "Politika", "Sport", "Nauka/tehnologija", "Kultura", "Više filtera ...")
     val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_none", "filter_chip_more")
+
     FlowRow(modifier = Modifier.padding(8.dp)) {
         categories.forEachIndexed { index, category ->
             FilterChip(
                 selected = chosenCategory == category,
                 onClick = {
-                    if (chosenCategory != category) {
+                    if (category == "Više filtera ...") {
+                        navController.navigate("/filters")
+                    } else {
                         onCategoryChosen(category)
                     }
                 },
@@ -59,4 +96,3 @@ fun FilterChips(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
         }
     }
 }
-

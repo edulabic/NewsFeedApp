@@ -11,6 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import etf.ri.rma.newsfeedapp.screen.FilterScreen
 import etf.ri.rma.newsfeedapp.screen.NewsFeedScreen
 import etf.ri.rma.newsfeedapp.ui.theme.NewsFeedAppTheme
 
@@ -21,12 +29,25 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NewsFeedAppTheme {
-                NewsFeedScreen()
-                }
+                val navController = rememberNavController()
+                AppNavGraph(navController)
+            }
             }
         }
     }
 
+@Composable
+fun AppNavGraph(navController: NavController) {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "/home") {
+        composable("/home") {
+            NewsFeedScreen(navController)
+        }
+        composable("/filters") {
+            FilterScreen(navController)
+        }
+    }
+}
 
 
 
@@ -34,6 +55,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
 NewsFeedAppTheme {
-    NewsFeedScreen()
+   // NewsFeedScreen("/home")
     }
 }

@@ -1,36 +1,122 @@
 package etf.ri.rma.newsfeedapp.screen
 
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import android.icu.text.SimpleDateFormat
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import java.util.*
 
-
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun FilterChip(chosenCategory: String, onCategoryChosen: (String) -> Unit) {
-    val categories = listOf("Sve", "Politika", "Sport", "Nauka/tehnologija", "Kultura", "Više filtera ...")
-    val tags = listOf("filter_chip_all", "filter_chip_pol", "filter_chip_spo", "filter_chip_sci", "filter_chip_none", "filter_chip_more")
-    FlowRow(modifier = Modifier.padding(8.dp)) {
-        categories.forEachIndexed { index, category ->
-            FilterChip(
-                selected = chosenCategory == category,
-                onClick = {
-                    if (chosenCategory != category) {
-                        onCategoryChosen(category)
-                    }
-                },
-                label = { Text(category) },
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .testTag(tags[index])
+fun FilterScreen(navController: NavController) {
+    var selectedCategory by remember { mutableStateOf("Sve") }
+
+    val categories = listOf(
+        "Sve" to "filter_chip_all",
+        "Politika" to "filter_chip_pol",
+        "Sport" to "filter_chip_spo",
+        "Nauka/tehnologija" to "filter_chip_sci"
+    )
+
+    var dateRangeText by remember { mutableStateOf("Odaberite opseg datuma") }
+    val datePickerState = rememberDateRangePickerState()
+    val openDialog = remember { mutableStateOf(false) }
+
+    if (openDialog.value) {
+        DatePickerDialog(
+            onDismissRequest = { openDialog.value = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                        val start = datePickerState.selectedStartDateMillis?.let {
+                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date(it))
+                        }
+                        val end = datePickerState.selectedEndDateMillis?.let {
+                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date(it))
+                        }
+                        dateRangeText = if (start != null && end != null) "$start;$end" else "Odaberite opseg datuma"
+                    },
+                    enabled = datePickerState.selectedEndDateMillis != null
+                ) {
+                    Text("Potvrdi")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { openDialog.value = false }) {
+                    Text("Odustani")
+                }
+            }
+        ) {
+            DateRangePicker(
+                state = datePickerState,
+                modifier = Modifier.weight(1f)
             )
         }
     }
-}
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text("Filtriraj po kategoriji:")
+
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                categories.forEach { (name, tag) ->
+                    FilterChip(
+                        selected = selectedCategory == name,
+                        onClick = { selectedCategory = name },
+                        label = { Text(name) },
+                        modifier = Modifier.testTag(tag)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text("Filtriraj po datumu:")
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = dateRangeText,
+                    modifier = Modifier.testTag("filter_daterange_display")
+                )
+
+                Button(
+                    onClick = { openDialog.value = true },
+                    modifier = Modifier.testTag("filter_daterange_button")
+                ) {
+                    Text("Odaberi")
+                }
+            }
+        }
+
+        Button(
+            onClick = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("filter_category", selectedCategory)
+                navController.previousBackStackEntry?.savedStateHandle?.set("filter_date_range", dateRangeText)
+                navController.popBackStack()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp)
+                .testTag("filter_apply_button")
+        ) {
+            Text("Primijeni filtere")
+        }
+    }
+}

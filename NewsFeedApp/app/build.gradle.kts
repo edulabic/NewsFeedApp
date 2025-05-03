@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "etf.ri.rma.newsfeedapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -40,7 +40,8 @@ android {
 }
 
 dependencies {
-
+    val nav_version = "2.7.7"
+    implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
