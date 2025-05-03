@@ -26,6 +26,9 @@ fun FilterScreen(navController: NavController) {
     var dateRangeText by remember { mutableStateOf("Odaberite opseg datuma") }
     val datePickerState = rememberDateRangePickerState()
     val openDialog = remember { mutableStateOf(false) }
+    var unwantedWord by remember { mutableStateOf("") }
+    var unwantedWords by remember { mutableStateOf(listOf<String>()) }
+
 
     if (openDialog.value) {
         DatePickerDialog(
@@ -104,11 +107,51 @@ fun FilterScreen(navController: NavController) {
                 }
             }
         }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text("Neželjene riječi u vijestima:")
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextField(
+                value = unwantedWord,
+                onValueChange = { unwantedWord = it },
+                label = { Text("Unesi riječ") },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("filter_unwanted_input")
+            )
+
+            Button(
+                onClick = {
+                    val wordLower = unwantedWord.trim().lowercase()
+                    if (wordLower.isNotEmpty() && unwantedWords.none { it.equals(wordLower, ignoreCase = true) }) {
+                        unwantedWords = unwantedWords + wordLower
+                        unwantedWord = ""
+                    }
+                },
+                modifier = Modifier.testTag("filter_unwanted_add_button")
+            ) {
+                Text("Dodaj")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(modifier = Modifier.testTag("filter_unwanted_list")) {
+            unwantedWords.forEach { word ->
+                Text(text = word)
+            }
+        }
 
         Button(
             onClick = {
                 navController.previousBackStackEntry?.savedStateHandle?.set("filter_category", selectedCategory)
                 navController.previousBackStackEntry?.savedStateHandle?.set("filter_date_range", dateRangeText)
+                navController.previousBackStackEntry?.savedStateHandle?.set("filter_unwanted_words", unwantedWords)
                 navController.popBackStack()
             },
             modifier = Modifier

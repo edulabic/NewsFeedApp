@@ -28,6 +28,8 @@ fun NewsFeedScreen(navController: NavController) {
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val appliedCategory = savedStateHandle?.get<String>("filter_category")
     val appliedDateRange = savedStateHandle?.get<String>("filter_date_range")
+    val unwantedWords = savedStateHandle?.get<List<String>>("filter_unwanted_words") ?: emptyList()
+
 
     var chosenCategory by remember { mutableStateOf(appliedCategory ?: "Sve") }
 
@@ -41,7 +43,7 @@ fun NewsFeedScreen(navController: NavController) {
         else -> newsList
     }
 
-    val filteredNews = appliedDateRange?.takeIf { it.contains(";") }?.let { range ->
+    val filteredByDate = appliedDateRange?.takeIf { it.contains(";") }?.let { range ->
         val (startStr, endStr) = range.split(";")
         val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         val startDate = formatter.parse(startStr)
@@ -52,6 +54,13 @@ fun NewsFeedScreen(navController: NavController) {
                     !newsDate.before(startDate) && !newsDate.after(endDate)
         }
     } ?: filteredByCategory
+
+    val filteredNews = filteredByDate.filter { newsItem ->
+        unwantedWords.none { word ->
+            newsItem.title.contains(word, ignoreCase = true) ||
+                    newsItem.snippet.contains(word, ignoreCase = true)
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         FilterChips(
