@@ -3,6 +3,7 @@ package etf.ri.rma.newsfeedapp.screen
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 
@@ -28,14 +29,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import etf.ri.rma.newsfeedapp.R
 
 @Composable
-fun FeaturedNewsCard(newsItem: NewsItem) {
+fun FeaturedNewsCard(newsItem: NewsItem, navController: NavController) {
     Card(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable{
+                navController.navigate("/details/${newsItem.id}")
+            },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {

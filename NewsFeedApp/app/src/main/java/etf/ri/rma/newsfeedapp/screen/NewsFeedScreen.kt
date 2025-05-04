@@ -72,7 +72,7 @@ fun NewsFeedScreen(navController: NavController) {
                 savedStateHandle?.remove<String>("filter_date_range")
             }
         )
-        NewsList(newsItems = filteredNews, chosenCategory = chosenCategory)
+        NewsList(newsItems = filteredNews, chosenCategory = chosenCategory, navController = navController)
     }
 }
 

@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import etf.ri.rma.newsfeedapp.screen.FilterScreen
+import etf.ri.rma.newsfeedapp.screen.NewsDetailsScreen
 import etf.ri.rma.newsfeedapp.screen.NewsFeedScreen
 import etf.ri.rma.newsfeedapp.ui.theme.NewsFeedAppTheme
 
@@ -45,6 +46,15 @@ fun AppNavGraph(navController: NavController) {
         }
         composable("/filters") {
             FilterScreen(navController)
+        }
+        composable(
+            route = "/details/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStackEntry ->
+
+            val newsId = backStackEntry.arguments?.getString("id")
+
+            NewsDetailsScreen(navController = navController, newsId = newsId)
         }
     }
 }
