@@ -117,9 +117,11 @@ fun NewsDetailsScreen(
                         modifier = Modifier
                             .testTag("related_news_title_${index + 1}")
                             .clickable {
-
                                 navController.navigate("/details/${newsItem.id}") {
-
+                                    popUpTo("/details/{newsId}") {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
                                 }
                             }
                             .padding(vertical = 4.dp)

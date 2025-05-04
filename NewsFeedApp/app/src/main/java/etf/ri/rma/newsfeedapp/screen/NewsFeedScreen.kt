@@ -66,10 +66,10 @@ fun NewsFeedScreen(navController: NavController) {
         FilterChips(
             navController = navController,
             chosenCategory = chosenCategory,
+
             onCategoryChosen = {
                 chosenCategory = it
-                savedStateHandle?.remove<String>("filter_category")
-                savedStateHandle?.remove<String>("filter_date_range")
+                navController.currentBackStackEntry?.savedStateHandle?.set("filter_category", it)
             }
         )
         NewsList(newsItems = filteredNews, chosenCategory = chosenCategory, navController = navController)
@@ -92,7 +92,9 @@ fun FilterChips(
                 selected = chosenCategory == category,
                 onClick = {
                     if (category == "Više filtera ...") {
-                        navController.navigate("/filters")
+                        navController.navigate("/filters") {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("filter_category", chosenCategory)
+                        }
                     } else {
                         onCategoryChosen(category)
                     }

@@ -39,8 +39,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavGraph(navController: NavController) {
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "/home") {
+
+    NavHost(navController = navController as NavHostController, startDestination = "/home") {
         composable("/home") {
             NewsFeedScreen(navController)
         }
@@ -51,14 +51,11 @@ fun AppNavGraph(navController: NavController) {
             route = "/details/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) { backStackEntry ->
-
             val newsId = backStackEntry.arguments?.getString("id")
-
             NewsDetailsScreen(navController = navController, newsId = newsId)
         }
     }
 }
-
 
 
 @Preview(showBackground = true)

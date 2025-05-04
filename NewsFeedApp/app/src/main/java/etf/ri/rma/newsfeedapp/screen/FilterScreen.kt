@@ -2,10 +2,12 @@ package etf.ri.rma.newsfeedapp.screen
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -14,8 +16,13 @@ import java.util.*
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun FilterScreen(navController: NavController) {
-    var selectedCategory by remember { mutableStateOf("Sve") }
-
+    val savedStateHandle = navController.previousBackStackEntry?.savedStateHandle
+    val initialCategory = savedStateHandle?.get<String>("filter_category") ?: "Sve"
+    var selectedCategory by remember { mutableStateOf(initialCategory) }
+    val savedDateRange = savedStateHandle?.get<String>("filter_date_range") ?: "Odaberite opseg datuma"
+    var dateRangeText by remember { mutableStateOf(savedDateRange) }
+    val savedUnwantedWords = savedStateHandle?.get<List<String>>("filter_unwanted_words") ?: emptyList()
+    var unwantedWords by remember { mutableStateOf(savedUnwantedWords) }
     val categories = listOf(
         "Sve" to "filter_chip_all",
         "Politika" to "filter_chip_pol",
@@ -23,11 +30,9 @@ fun FilterScreen(navController: NavController) {
         "Nauka/tehnologija" to "filter_chip_sci"
     )
 
-    var dateRangeText by remember { mutableStateOf("Odaberite opseg datuma") }
     val datePickerState = rememberDateRangePickerState()
     val openDialog = remember { mutableStateOf(false) }
     var unwantedWord by remember { mutableStateOf("") }
-    var unwantedWords by remember { mutableStateOf(listOf<String>()) }
 
 
     if (openDialog.value) {
@@ -86,8 +91,10 @@ fun FilterScreen(navController: NavController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
 
+
+
+            Spacer(modifier = Modifier.height(24.dp))
             Text("Filtriraj po datumu:")
 
             Row(
@@ -127,9 +134,9 @@ fun FilterScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    val wordLower = unwantedWord.trim().lowercase()
-                    if (wordLower.isNotEmpty() && unwantedWords.none { it.equals(wordLower, ignoreCase = true) }) {
-                        unwantedWords = unwantedWords + wordLower
+                    val word = unwantedWord.trim()
+                    if (word.isNotEmpty() && unwantedWords.none { it.equals(word, ignoreCase = true) }) {
+                        unwantedWords = unwantedWords + word
                         unwantedWord = ""
                     }
                 },
@@ -141,12 +148,16 @@ fun FilterScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Column(modifier = Modifier.testTag("filter_unwanted_list")) {
-            unwantedWords.forEach { word ->
-                Text(text = word)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 150.dp)
+                .testTag("filter_unwanted_list")
+        ) {
+            items(unwantedWords) { word ->
+                Text(text = word, modifier = Modifier.padding(vertical = 2.dp))
             }
         }
-
         Button(
             onClick = {
                 navController.previousBackStackEntry?.savedStateHandle?.set("filter_category", selectedCategory)
