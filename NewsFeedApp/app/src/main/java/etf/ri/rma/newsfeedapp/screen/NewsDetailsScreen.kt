@@ -51,9 +51,7 @@ fun NewsDetailsScreen(
             emptyList()
         } else {
             newsList
-
                 .filter { it.category == currentNews.category && it.id != currentNews.id }
-
                 .mapNotNull { newsItem ->
                     try {
                         val newsDate = formatter.parse(newsItem.publishedDate)

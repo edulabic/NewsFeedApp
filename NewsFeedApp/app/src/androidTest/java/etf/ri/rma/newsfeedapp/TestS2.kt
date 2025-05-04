@@ -83,7 +83,9 @@ class TestS2 {
         //provjera ispravnog prikaza detalja vijesti
         val news = NewsData.getAllNews().get(2)
         var listnode = composeTestRule.onNodeWithTag("news_list")
-        listnode.performScrollToNode(hasText(news.title)).performClick()
+        listnode.performScrollToNode(hasText(news.title))
+        composeTestRule.onNode(hasText(news.title))
+            .performClick()
         composeTestRule.onNodeWithTag("details_title").assert(hasText(news.title))
         composeTestRule.onNodeWithTag("details_snippet").assert(hasText(news.snippet))
         composeTestRule.onNodeWithTag("details_source").assert(hasText(news.source,substring = true))
