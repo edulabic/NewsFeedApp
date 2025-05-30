@@ -63,5 +63,7 @@ fun AppNavGraph(navController: NavController) {
 fun GreetingPreview() {
 NewsFeedAppTheme {
    // NewsFeedScreen("/home")
+    val navController = rememberNavController()
+    AppNavGraph(navController)
     }
 }

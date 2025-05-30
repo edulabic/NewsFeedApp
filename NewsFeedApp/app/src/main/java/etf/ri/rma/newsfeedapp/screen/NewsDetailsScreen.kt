@@ -29,9 +29,10 @@ fun NewsDetailsScreen(
     newsId: String?
 ) {
 
-    val newsList = remember { NewsData.getAllNews() }
-
-    val currentNews = remember(newsId) { newsList.find { it.id == newsId } }
+    val newsList by produceState<List<NewsItem>>(emptyList()) {
+        value = NewsData.getAllNews()
+    }
+    val currentNews = remember(newsId) { newsList.find { it.uuid == newsId } }
 
     if (currentNews == null) {
         Text("Vijest nije pronađena.")
@@ -42,7 +43,7 @@ fun NewsDetailsScreen(
         return
     }
 
-    val relatedNews = remember(currentNews.id, newsList) {
+    val relatedNews = remember(currentNews.uuid, newsList) {
         val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 
         val currentNewsDate = try { formatter.parse(currentNews.publishedDate) } catch (e: Exception) { null }
@@ -51,7 +52,7 @@ fun NewsDetailsScreen(
             emptyList()
         } else {
             newsList
-                .filter { it.category == currentNews.category && it.id != currentNews.id }
+                .filter { it.category == currentNews.category && it.uuid != currentNews.uuid }
                 .mapNotNull { newsItem ->
                     try {
                         val newsDate = formatter.parse(newsItem.publishedDate)
@@ -115,7 +116,7 @@ fun NewsDetailsScreen(
                         modifier = Modifier
                             .testTag("related_news_title_${index + 1}")
                             .clickable {
-                                navController.navigate("/details/${newsItem.id}") {
+                                navController.navigate("/details/${newsItem.uuid}") {
                                     popUpTo("/details/{newsId}") {
                                         inclusive = true
                                     }

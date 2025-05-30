@@ -24,12 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import etf.ri.rma.newsfeedapp.R
 
 @Composable
@@ -39,20 +42,25 @@ fun FeaturedNewsCard(newsItem: NewsItem, navController: NavController) {
             .padding(8.dp)
             .fillMaxWidth()
             .clickable{
-                navController.navigate("/details/${newsItem.id}")
+                navController.navigate("/details/${newsItem.uuid}")
             },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Column {
-            Image(
-                painter = painterResource(id = R.drawable.news_image),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(newsItem.imageUrl)
+                    .crossfade(true)
+                    .error(R.drawable.news_image)
+                    .placeholder(R.drawable.news_image)
+                    .build(),
                 contentDescription = "News image",
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
-                    .padding(start=8.dp, end=8.dp),
-                contentScale = ContentScale.Crop
+                    .padding(start = 8.dp, end = 8.dp),
+                contentScale = ContentScale.Crop,
             )
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(newsItem.title, maxLines=2, fontWeight = FontWeight.Bold)

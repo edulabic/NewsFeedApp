@@ -2,211 +2,147 @@ package etf.ri.rma.newsfeedapp.data
 
 import androidx.compose.runtime.sourceInformationMarkerEnd
 import etf.ri.rma.newsfeedapp.model.NewsItem
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 object NewsData {
-    fun getAllNews(): List<NewsItem>{
-        return listOf(
+    suspend fun getAllNews(): List<NewsItem> {
+        val newsItems = mutableListOf(
             NewsItem(
-                id="1",
-                title="Zmajevi osigurali prolaz na Svjetsko prvenstvo!",
-                snippet= "Pobjedivši reprezentaciju Austrije, Bosna i Hercegovina je zauzela prvo mjesto u kvalifikacionoj grupi i oduševila naciju.",
-                imageUrl = null,
-                category = "Sport",
-                isFeatured = true,
-                source = "reprezentacija.ba",
-                publishedDate = "17-02-2025"
-            ),
-            NewsItem(
-                id="2",
-                title="Košarkaši BiH briljirali protiv Litvanije",
-                snippet="Nevjerovatna utakmica naših košarkaša u Sarajevu, ostvarena ubjedljiva pobjeda rezultatom 109:81",
-                imageUrl=null,
-                category="Sport",
+                uuid = "be025a89-b068-4b7d-9c64-b4f558b46065",
+                title = "Phillies’ Romano fans Braves’ White with bases loaded to end game",
+                snippet = "Sign in to Sportsnet\n\nSign In Sign Up\n\nFirst Name {...}",
+                imageUrl = "https://www.sportsnet.ca/sn_favicon.ico",
+                category = "sports",
                 isFeatured = false,
-                source = "sport.ba",
-                publishedDate = "16-01-2025"
+                source = "sportsnet.ca",
+                publishedDate = "2025-05-29T23:07:48.000000Z",
+                imageTags = arrayListOf()
             ),
             NewsItem(
-                id="3",
-                title="Najbolja bh plivačica osvojila zlato na Olimpijskim igrama",
-                snippet="Talentovana Lana Pudar osvojila je zlato i postavila novi svjetski rekord za 200m delfin.",
-                imageUrl=null,
-                category="Sport",
+                uuid="783b0d47-f15f-49a8-b9fb-6a5b2d03d89e",
+                title="Amber Rose Opens Up About Why She's Advocating for Tory Lanez's Freedom",
+                snippet="Amber Rose appeared on NewsNation’s CUOMO with Chris Cuomo this week, where she opened up about her vocal support for Tory Lanez, who is currently serving a 1...",
+                imageUrl="https://www.vladtv.com/images/size_fs/video-311245.jpg?ver=1748558809",
+                category="entertainment",
+                isFeatured=false,
+                source="vladtv.com",
+                publishedDate="2025-05-29T23:46:49.000000Z",
+                imageTags=arrayListOf()
+            ),
+            NewsItem(
+                uuid="718b1e2e-333e-49f1-8203-a5a14cb8c3f1",
+                title="New quantum material bends electrons, unlocks zero-loss electricity",
+                snippet="Physicists at Rice University have now taken a major step in that direction.\n\nLed by Ming Yi and Emilia Morosan, the team developed a new quantum material with ...",
+                imageUrl="https://cms.interestingengineering.com/wp-content/uploads/2025/05/Untitled-design-2025-05-30T043658.134.jpg",
+                category="tech",
                 isFeatured=true,
-                source="sport.ba",
-                publishedDate="15-01-2025"
+                source="interestingengineering.com",
+                publishedDate="2025-05-29T23:41:20.000000Z",
+                imageTags=arrayListOf()
             ),
             NewsItem(
-                id="4",
-                title="Maraton u Mostaru: Rekordan broj učesnika",
-                snippet="Više od 2000 trkača učestvovalo na ovogodišnjem maratonu.",
-                imageUrl=null,
-                category="Sport",
+                uuid="e1f2cba9-2486-4bb6-a8ae-25b00ae750d0",
+                title="Sempra (SRE) Gets Green Light for Port Arthur LNG Phase 2 Export",
+                snippet="Sempra's Port Arthur LNG Phase 2 project receives a significant boost with a new DOE permit.\n\nAnalysts suggest a modest upside potential for Sempra (SRE, Financ...",
+                imageUrl="https://static.gurufocus.com/logos/0C000008ZC.png?20",
+                category="business",
                 isFeatured=false,
-                source="hercegovinasport.ba",
-                publishedDate="14-01-2025"
+                source="gurufocus.com",
+                publishedDate="2025-05-29T23:56:03.000000Z",
+                imageTags=arrayListOf()
             ),
             NewsItem(
-                id="5",
-                title="Nova nada bh. fudbala prelazi u Bayern",
-                snippet="Mladi napadač potpisao ugovor s njemačkim gigantom, očekuje se njegov nastup i za reprezentaciju BiH",
-                imageUrl=null,
-                category="Sport",
+                uuid="a67e699e-88e8-4cd8-9498-41cc1def5108",
+                title="Vegan Calamari That’s Healthy and Full of Flavor",
+                snippet="When most of us see calamari on a restaurant menu, it’s unlikely we think of the sea creature it was made from. But the clue is actually right there in the na...",
+                imageUrl="https://vegnews.com/media/W1siZiIsIjQyMDcyL1ZlZ05ld3MuQ2FsYW1hcmkuSGFwcGllZS5qcGciXSxbInAiLCJjcm9wX3Jlc2l6ZWQiLCIxMDc3eDU2NSsxKzc5IiwiMTIwMHg2MzBeIix7ImZvcm1hdCI6ImpwZyJ9XSxbInAiLCJvcHRpbWl6ZSJdXQ/VegNews.Calamari.Happiee.jpg?sha=6fa8a4f00d2d68ae",
+                category="food",
+                isFeatured=false,
+                source="vegnews.com",
+                publishedDate="2025-05-29T22:56:00.000000Z",
+                imageTags=arrayListOf()
+            ),
+            NewsItem(
+                uuid="249d681b-a5e5-4dc7-a636-02dc5e149e2a",
+                title="'A bunch of stories that are worth telling': new book details North Bay's history",
+                snippet="A retired North Bay journalist has published a book about the city's history, right in time for 100th anniversary celebrations.\n\nPeter Fleming Handley is the au...",
+                imageUrl="https://i.cbc.ca/1.7547324.1748544327!/fileImage/httpImage/image.jpg_gen/derivatives/16x9_1180/vis-a-vis.jpg?im=Resize%3D620",
+                category="general",
+                isFeatured=false,
+                source="cbc.ca",
+                publishedDate="2025-05-30T00:00:00.000000Z",
+                imageTags=arrayListOf()
+            ),
+            NewsItem(
+                uuid="4b74a528-7e48-48fe-9705-6120c3990e70",
+                title="Ancient dinosaur fossil may offer clues for future cancer treatments",
+                snippet="The findings raise the possibility that ancient tumours could help unravel cancer’s molecular origins and potentially inform future treatments.\n\nAncient cells...",
+                imageUrl="https://cms.interestingengineering.com/wp-content/uploads/2025/05/iStock-173758906.jpg",
+                category="science",
+                isFeatured=false,
+                source="interestingengineering.com",
+                publishedDate="2025-05-29T23:37:41.000000Z",
+                imageTags=arrayListOf()
+            ),
+            NewsItem(
+                uuid="b55bfcd4-3b8d-42a5-aef8-2149339d50be",
+                title="Invictus Fitness",
+                snippet="General Warm-Up\n\nTwo rounds of:\n\n250 Meter Row\n\n10 Goblet Hold Alternating Lateral Lunges\n\n10 Goblet Hold Good Mornings\n\nand then…\n\nTwo rounds with an empty b...",
+                imageUrl="https://invictusfitness.com/wp-content/uploads/2015/11/logo.png",
+                category="health",
+                isFeatured=false,
+                source="crossfitinvictus.com",
+                publishedDate="2025-05-29T23:00:50.000000Z",
+                imageTags=arrayListOf()
+            ),
+            NewsItem(
+                uuid="1dcb5198-5005-4dbf-a52c-d1b8bebe9220",
+                title="WATCH: Bureaucrat caught admitting to 'bending the rules' to give illegals benefits * WorldNetDaily * by Cristina Laila, the Gateway Pundit",
+                snippet="The O’Keefe Media Group on Thursday released undercover video of a Nevada Department of Health and Human Services (DHHS) Division of Welfare and Supportive Se...",
+                imageUrl="https://www.wnd.com/wp-content/uploads/2025/05/nevada-illegals-omg.jpg",
+                category="politics",
                 isFeatured=true,
-                source="klix.ba",
-                publishedDate="13-03-2025"
+                source="wnd.com",
+                publishedDate="2025-05-29T23:44:15.000000Z",
+                imageTags=arrayListOf()
             ),
             NewsItem(
-                id="6",
-                title="Potvrđena optužnica protiv ministra sigurnosti BiH",
-                snippet = "Nakon tri mjeseca šutnje, potvrđene su informacije da je ministar sigurnosti pod lupom MUP-a Kantona Sarajevo",
-                imageUrl = null,
-                category = "Politika",
-                isFeatured = false,
-                source = "klix.ba",
-                publishedDate="13-03-2025"
-
-            ),
-            NewsItem(
-                id="7",
-                title="Stranka demokratske akcije kažnjena zbog prijevremene izborne kampanje",
-                snippet = "Prijava Stranke demokratske akcije stigla je zbog podjele EuroBlok čokoladica sa omotom njenih članova",
-                imageUrl = null,
-                category = "Politika",
-                isFeatured = false,
-                source = "klix.ba",
-                publishedDate = "12-04-2025"
-            ),
-            NewsItem(
-                id="8",
-                title = "Visoka predstavnica EU stiže u Bosnu i Hercegovinu",
-                snippet = "Visoka predstavnica EU ima dogovoren sastanak sa članovima Predsjedništva BiH, razgovarat će o sigurnosnoj politici BiH",
-                imageUrl = null,
-                category = "Politika",
-                isFeatured = false,
-                source = "klix.ba",
-                publishedDate = "27-01-2025"
-            ),
-            NewsItem(
-                id="9",
-                title = "Izglasan zakon o neradnoj nedjelji u FBiH",
-                snippet = "Zakon ni ovaj put ne vrijedi za cijelu Bosnu i Hercegovinu, zvaničnici RS bili su protiv",
-                imageUrl = null,
-                category = "Politika",
-                isFeatured = true,
-                source = "klix.ba",
-                publishedDate = "03-01-2025"
-            ),
-            NewsItem(
-                id="10",
-                title = "Uspjeh srednjoškolaca na svjetskom takmičenju iz matematike ",
-                snippet = "Uspješni srednjoškolci vratili su se iz Pariza sa 11 osvojenih medalja, čime su osigurali prestižne stipendije za početak studiranja.",
-                imageUrl = null,
-                category = "Nauka/tehnologija",
-                isFeatured = true,
-                source = "avaz.ba",
-                publishedDate = "24-03-2025"
-            ),
-            NewsItem(
-                id="11",
-                title="Bh. studenti osvojili zlato na svjetskom takmičenju iz robotike",
-                snippet="Inovativni tim Elektrotehničkog fakulteta Sarajevo briljirao u Švicarskoj.",
-                imageUrl=null,
-                category="Nauka/tehnologija",
-                isFeatured=true,
-                source="tehno.ba",
-                publishedDate="17-03-2025"
-            ),
-            NewsItem(
-                id="12",
-                title="Mostar dobija prvi tehnološki park u BiH",
-                snippet="Projekat vrijedan 15 miliona eura okupit će startupe i inovatore iz cijele regije.",
-                imageUrl=null,
-                category="Nauka/tehnologija",
+                uuid="40290076-a8b6-49e9-9815-bbc4bccbaefd",
+                title="SIHOT and Dingus Automate Tour Operator Bookings with Real-Time PMS Integration",
+                snippet="Now, reservations from Dingus are automatically linked to specific contracts within SIHOT, allowing the system to distinguish between allotment-based and genera...",
+                imageUrl="https://hospitalitytech.com/images/v/16_x_9_480/2025-05/unnamed_9.jpg",
+                category="travel",
                 isFeatured=false,
-                source="startup.ba",
-                publishedDate="20-01-2025"
-            ),
-            NewsItem(
-                id="13",
-                title="U Zenici otvoren prvi laboratorij za robotiku",
-                snippet="Najmodernija oprema dostupna je studentima i istraživačima za razvoj naprednih robotskih sistema.",
-                imageUrl=null,
-                category="Nauka/tehnologija",
-                isFeatured=false,
-                source="tehno.ba",
-                publishedDate="05-01-2025"
-            ),
-            NewsItem(
-                id="14",
-                title="Historijski uspjeh bh. tenisera na Roland Garrosu",
-                snippet="Mladi teniser iz Banja Luke plasirao se među 8 najboljih na prestižnom Grand Slam turniru.",
-                imageUrl=null,
-                category="Sport",
-                isFeatured=true,
-                source="sportski.ba",
-                publishedDate="01-04-2025"
-            ),
-            NewsItem(
-                id="15",
-                title="Rukometaši BiH izborili plasman na Evropsko prvenstvo",
-                snippet="Nakon dramatične utakmice protiv Slovenije, naša reprezentacija osigurala mjesto među evropskom elitom.",
-                imageUrl=null,
-                category="Sport",
-                isFeatured=true,
-                source="sportskiportal.ba",
-                publishedDate="10-04-2025"
-            ),
-            NewsItem(
-                id="16",
-                title="Fudbalska liga BiH: Spektakl u derbiju kola",
-                snippet="Sarajevo i Željezničar remizirali u dramatičnoj utakmici.",
-                imageUrl=null,
-                category="Sport",
-                isFeatured=false,
-                source="sportsport.ba",
-                publishedDate="02-01-2025"
-            ),
-            NewsItem(
-                id="17",
-                title="Predložene izmjene Ustava FBiH",
-                snippet="Stručnjaci ukazuju na potrebu za reformama, zastarjeli Zakoni ne mogu donijeti napredak",
-                imageUrl=null,
-                category="Politika",
-                isFeatured=false,
-                source="klix.ba",
-                publishedDate="01-02-2025"
-            ),
-            NewsItem(
-                id="18",
-                title="BiH uvodi predmet Programiranje u osnovne škole",
-                snippet="Djeca će već od petog razreda učiti osnove kodiranja.",
-                imageUrl=null,
-                category="Nauka/tehnologija",
-                isFeatured=true,
-                source="edukacija.ba",
-                publishedDate="30-01-2025"
-            ),
-            NewsItem(
-                id="19",
-                title="Bh. aplikacija za učenje jezika osvojila međunarodnu nagradu",
-                snippet="Inovativni softver koristi vještačku inteligenciju za personalizovane lekcije prilagođene svakom korisniku.",
-                imageUrl=null,
-                category="Nauka/tehnologija",
-                isFeatured=false,
-                source="tehno.ba",
-                publishedDate="15-01-2025"
-            ),
-            NewsItem(
-                id="20",
-                title="Izmjena izbornog zakona: Uvedeno je elektronsko glasanje",
-                snippet="Od 2026. godine, bit će smanjena stopa propusta u glasanju za državne službenike zahvaljujući uvođenju elektronskog glasanja.",
-                imageUrl=null,
-                category="Politika",
-                isFeatured=false,
-                source="klix.ba",
-                publishedDate="28-03-2025"
+                source="hospitalitytech.com",
+                publishedDate="2025-05-29T23:34:27.000000Z",
+                imageTags=arrayListOf()
             )
         )
+
+        coroutineScope {
+            newsItems.forEach { newsItem ->
+                launch {
+                    newsItem.imageUrl?.let { url ->
+                        try {
+                            val tags = ImageDAO.getTags(url)
+                            newsItem.imageTags.addAll(tags)
+                        } catch (e: InvalidImageURLException) {
+                            println("Error fetching tags for '${newsItem.title}' (URL: $url): ${e.message}")
+                            newsItem.imageTags.add("error: ${e.message}")
+                        } catch (e: Exception) {
+                            println("An unexpected error occurred for '${newsItem.title}' (URL: $url): ${e.message}")
+                            newsItem.imageTags.add("error: unexpected")
+                        }
+                    } ?: run {
+                        println("No image URL for '${newsItem.title}'.")
+                        newsItem.imageTags.add("no-image")
+                    }
+                }
+            }
+        }
+        return newsItems
     }
 }
+

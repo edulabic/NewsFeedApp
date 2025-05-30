@@ -19,7 +19,7 @@ fun NewsList(newsItems : List<NewsItem>, chosenCategory: String, navController: 
                 MessageCard(chosenCategory)
             }
         } else {
-            items(newsItems, key = { it.id }) { newsItem ->
+            items(newsItems, key = { it.uuid }) { newsItem ->
                 if (newsItem.isFeatured) {
                     FeaturedNewsCard(newsItem, navController = navController)
                 } else {

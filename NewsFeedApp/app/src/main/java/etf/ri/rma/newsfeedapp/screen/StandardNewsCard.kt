@@ -23,8 +23,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import etf.ri.rma.newsfeedapp.R
 
 @Composable
@@ -34,14 +37,19 @@ fun StandardNewsCard(newsItem: NewsItem, navController: NavController) {
             .fillMaxWidth()
             .padding(8.dp)
             .clickable{
-                navController.navigate("/details/${newsItem.id}")
+                navController.navigate("/details/${newsItem.uuid}")
             },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
-            Image(
-                painter = painterResource(R.drawable.newss_image),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(newsItem.imageUrl)
+                    .crossfade(true)
+                    .error(R.drawable.newss_image)
+                    .placeholder(R.drawable.newss_image)
+                    .build(),
                 contentDescription = "News image",
                 modifier = Modifier
                     .size(80.dp)

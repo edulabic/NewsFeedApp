@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import etf.ri.rma.newsfeedapp.data.NewsData
 import android.icu.text.SimpleDateFormat
+import androidx.compose.runtime.produceState
+import etf.ri.rma.newsfeedapp.model.NewsItem
 import java.util.Date
 import java.util.Locale
 @Composable
@@ -33,13 +35,14 @@ fun NewsFeedScreen(navController: NavController) {
 
     var chosenCategory by remember { mutableStateOf(appliedCategory ?: "Sve") }
 
-    val newsList = NewsData.getAllNews()
-
+    val newsList by produceState<List<NewsItem>>(emptyList()) {
+        value = NewsData.getAllNews()
+    }
     val filteredByCategory = when (chosenCategory) {
-        "Politika" -> newsList.filter { it.category == "Politika" }
-        "Sport" -> newsList.filter { it.category == "Sport" }
-        "Nauka/tehnologija" -> newsList.filter { it.category == "Nauka/tehnologija" }
-        "Kultura" -> newsList.filter { it.category == "Kultura" }
+        "Politika" -> newsList.filter { it.category == "politics" }
+        "Sport" -> newsList.filter { it.category == "sports" }
+        "Nauka/tehnologija" -> newsList.filter { it.category == "science" }
+        "Kultura" -> newsList.filter { it.category == "culture" }
         else -> newsList
     }
 
