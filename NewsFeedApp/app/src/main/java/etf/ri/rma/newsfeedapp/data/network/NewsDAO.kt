@@ -1,12 +1,11 @@
-package etf.ri.rma.newsfeedapp.data
+package etf.ri.rma.newsfeedapp.data.network
 
-import android.util.Log
 import com.google.gson.annotations.SerializedName
+import etf.ri.rma.newsfeedapp.data.network.api.NewsApiService
+import etf.ri.rma.newsfeedapp.data.network.exception.InvalidUUIDException
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Query
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -25,22 +24,37 @@ data class NewsItemApi(
     @SerializedName("image_url") val imageUrl: String?
 )
 
-
 object RetrofitInstance {
     private const val BASE_URL = "https://api.thenewsapi.com/v1/"
 
-    val api: NewsApi by lazy {
+    val api: NewsApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(NewsApi::class.java)
+            .create(NewsApiService::class.java)
     }
 }
 
-class NewsDAO(private val apiKey: String) {
+class NewsDAO {
+    private val cachedCategoryStories = mutableMapOf<String, Pair<Long, List<NewsItem>>>()
+    private val cacheTimeoutMillis = 30_000L
 
-    private val cachedStories = mutableListOf<NewsItemApi>()
+    private val apiKey = "Jty4AzGDU4uF8ImaRbXhdpqZ1XcQuE5rLxhhLl6H"
+    private var externalApi: NewsApiService? = null
+
+    constructor(apiService: NewsApiService) {
+        this.externalApi = apiService
+    }
+
+    constructor()
+
+    fun setApiService(apiService: NewsApiService) {
+        this.externalApi = apiService
+    }
+
+    private val api: NewsApiService
+        get() = externalApi ?: RetrofitInstance.api
 
     suspend fun getTopStoriesByCategory(category: String): List<NewsItem> {
         val allowedCategories = listOf(
@@ -51,39 +65,48 @@ class NewsDAO(private val apiKey: String) {
 
         require(category in allowedCategories) { "Invalid category" }
 
-        val response = RetrofitInstance.api.getTopStories(apiKey, category)
-        val newStories = response.data
+        val now = System.currentTimeMillis()
+        val cached = cachedCategoryStories[category]
 
-        newStories.forEach { newItem ->
-            if (cachedStories.none { it.uuid == newItem.uuid }) {
-                cachedStories.add(newItem)
-            }
+        if (cached != null && now - cached.first < cacheTimeoutMillis) {
+            return cached.second
         }
 
-        return newStories.map { it.toModel() }
+        val response = api.getTopStories(apiKey, category)
+        val newStories = response.data.map { it.toModel() }
+
+        cachedCategoryStories[category] = now to newStories
+
+        return newStories
     }
-
-
 
     fun getAllStories(): List<NewsItem> {
-        return cachedStories.map { it.toModel() }
+        return cachedCategoryStories.values.flatMap { it.second }
     }
+    private val similarCache: MutableMap<String, List<NewsItem>> = mutableMapOf()
 
     suspend fun getSimilarStories(uuid: String): List<NewsItem> {
-        if (!uuid.matches(Regex("^[0-9a-fA-F\\-]{36}$"))) {
-            throw InvalidUUIDException("Invalid UUID format: $uuid")
+        if (!uuid.matches(Regex("^[0-9a-fA-F-]{36}$"))) {
+            throw InvalidUUIDException("Neispravan uuid!")
         }
 
-        val reference = cachedStories.find { it.uuid == uuid } ?: return emptyList()
-        val sameCategory =
-            cachedStories.filter { it.category == reference.category && it.uuid != uuid }
-        return sameCategory.take(2).map { it.toModel() }
+        val cached = similarCache[uuid]
+        if (cached != null) {
+            return cached
+        }
+
+        val response = api.getSimilarStories(uuid)
+        val newsList = response.data.map { it.toModel() }
+        similarCache[uuid] = newsList
+        return newsList
     }
+
+
 }
+
 fun NewsItemApi.toModel(): NewsItem {
     val extractedCategory = this.category?.split(",")?.firstOrNull()?.trim() ?: "unknown"
 
-    // Format publishedAt from ISO to dd-MM-yyyy
     val extractedDate = try {
         val zonedDateTime = ZonedDateTime.parse(this.publishedAt)
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -104,4 +127,3 @@ fun NewsItemApi.toModel(): NewsItem {
         imageTags = arrayListOf()
     )
 }
-class InvalidUUIDException(message: String) : Exception(message)

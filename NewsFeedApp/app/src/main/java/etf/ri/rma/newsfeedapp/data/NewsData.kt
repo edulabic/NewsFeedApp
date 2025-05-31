@@ -1,6 +1,9 @@
 package etf.ri.rma.newsfeedapp.data
 
 import androidx.compose.runtime.sourceInformationMarkerEnd
+import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
+import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
+import etf.ri.rma.newsfeedapp.data.network.exception.InvalidUUIDException
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -122,11 +125,12 @@ object NewsData {
         )
 
         coroutineScope {
+            val imagaDAO = ImagaDAO()
             newsItems.forEach { newsItem ->
                 launch {
                     newsItem.imageUrl?.let { url ->
                         try {
-                            val tags = ImageDAO.getTags(url)
+                            val tags = imagaDAO.getTags(url)
                             newsItem.imageTags.addAll(tags)
                         } catch (e: InvalidImageURLException) {
                             println("Error fetching tags for '${newsItem.title}' (URL: $url): ${e.message}")

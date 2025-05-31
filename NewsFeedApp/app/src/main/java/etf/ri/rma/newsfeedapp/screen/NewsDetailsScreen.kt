@@ -18,8 +18,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import etf.ri.rma.newsfeedapp.data.NewsRepository
-import etf.ri.rma.newsfeedapp.data.ImageDAO
-import etf.ri.rma.newsfeedapp.data.InvalidImageURLException
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,6 +26,8 @@ import kotlin.math.abs
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import android.util.Log
+import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
+import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
@@ -83,7 +83,8 @@ fun NewsDetailsScreen(
                 isLoadingTags = true
                 tagsError = null
                 try {
-                    val tags = ImageDAO.getTags(currentNews.imageUrl)
+                    val imagaDAO = ImagaDAO()
+                    val tags = imagaDAO.getTags(currentNews.imageUrl)
                     imageTags = tags
 
                 } catch (e: InvalidImageURLException) {

@@ -1,12 +1,16 @@
 package etf.ri.rma.newsfeedapp.data
 
+import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
+import etf.ri.rma.newsfeedapp.data.network.NewsDAO
+import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
+import etf.ri.rma.newsfeedapp.data.network.exception.InvalidUUIDException
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 object NewsRepository {
-    private val dao = NewsDAO(apiKey = "Jty4AzGDU4uF8ImaRbXhdpqZ1XcQuE5rLxhhLl6H")
+    private val dao = NewsDAO()
     private val cache = mutableListOf<NewsItem>()
     private val categoryLastFetch = mutableMapOf<String, Long>()
 
@@ -122,15 +126,15 @@ object NewsRepository {
             imageTags=arrayListOf()
         )
     )
-
     init {
         runBlocking {
+            val imagaDAO = ImagaDAO()
             coroutineScope {
                 initialNewsItems.forEach { newsItem ->
                     launch {
                         newsItem.imageUrl?.let { url ->
                             try {
-                                val tags = ImageDAO.getTags(url)
+                                val tags = imagaDAO.getTags(url)
                                 newsItem.imageTags.addAll(tags)
                             } catch (e: InvalidImageURLException) {
                                 println("Error fetching tags for '${newsItem.title}' (URL: $url): ${e.message}")
@@ -198,7 +202,7 @@ object NewsRepository {
 
         val reference = cache.find { it.uuid == uuid } ?: return emptyList()
         val sameCategory = cache.filter { it.category == reference.category && it.uuid != uuid }
-        return sameCategory.take(2).toList() // Return a copy
+        return sameCategory.take(2).toList()
     }
 
 
