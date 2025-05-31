@@ -1,5 +1,6 @@
 package etf.ri.rma.newsfeedapp.screen
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
@@ -37,6 +38,7 @@ import etf.ri.rma.newsfeedapp.R
 
 @Composable
 fun FeaturedNewsCard(newsItem: NewsItem, navController: NavController) {
+
     Card(
         modifier = Modifier
             .padding(8.dp)

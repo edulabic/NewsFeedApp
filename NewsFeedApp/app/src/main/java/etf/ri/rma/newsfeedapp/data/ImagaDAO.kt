@@ -26,10 +26,10 @@ data class Tag(
     val confidence: Double
 )
 class InvalidImageURLException(message: String) : Exception(message)
-
 object ImageDAO {
     private const val BASE_URL = "https://api.imagga.com/"
     private const val AUTH_KEY = "acc_9423c9d71b1e36e:7fa4c117596c3f705f24b7e9012caf1a"
+    private val cache = mutableMapOf<String, List<String>>()  // URL -> Lista tagova
 
     private val retrofit by lazy {
         retrofit2.Retrofit.Builder()
@@ -47,6 +47,10 @@ object ImageDAO {
             throw InvalidImageURLException("Neispravan URL slike: $imageURL")
         }
 
+        if (cache.containsKey(imageURL)) {
+            return cache[imageURL]!!
+        }
+
         val credentials = android.util.Base64.encodeToString(AUTH_KEY.toByteArray(), android.util.Base64.NO_WRAP)
         val authHeader = "Basic $credentials"
 
@@ -57,7 +61,10 @@ object ImageDAO {
         }
 
         val tags = response.body()?.result?.tags ?: throw InvalidImageURLException("Nema tagova u odgovoru.")
-        return tags.mapNotNull { it.tag["en"] }
+        val tagList = tags.mapNotNull { it.tag["en"] }
+
+        cache[imageURL] = tagList
+
+        return tagList
     }
 }
-

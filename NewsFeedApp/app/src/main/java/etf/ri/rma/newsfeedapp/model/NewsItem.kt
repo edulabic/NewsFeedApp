@@ -5,7 +5,7 @@ data class NewsItem(
     val title: String,
     val snippet: String,
     val imageUrl: String?,
-    val category: String,
+    val category: String?,
     val isFeatured: Boolean,
     val source: String,
     val publishedDate: String,

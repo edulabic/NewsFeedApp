@@ -48,10 +48,10 @@ fun AppNavGraph(navController: NavController) {
             FilterScreen(navController)
         }
         composable(
-            route = "/details/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.StringType })
+            route = "/details/{uuid}",
+            arguments = listOf(navArgument("uuid") { type = NavType.StringType })
         ) { backStackEntry ->
-            val newsId = backStackEntry.arguments?.getString("id")
+            val newsId = backStackEntry.arguments?.getString("uuid")
             NewsDetailsScreen(navController = navController, newsId = newsId)
         }
     }

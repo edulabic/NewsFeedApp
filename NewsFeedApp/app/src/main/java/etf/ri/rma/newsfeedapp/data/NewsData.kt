@@ -144,5 +144,15 @@ object NewsData {
         }
         return newsItems
     }
+    suspend fun getSimilarStories(uuid: String): List<NewsItem> {
+        if (!uuid.matches(Regex("^[0-9a-fA-F\\-]{36}$"))) {
+            throw InvalidUUIDException("Invalid UUID format: $uuid")
+        }
+
+        val allNews = getAllNews()
+        val reference = allNews.find { it.uuid == uuid } ?: return emptyList()
+        val sameCategory = allNews.filter { it.category == reference.category && it.uuid != uuid }
+        return sameCategory.take(2)
+    }
 }
 

@@ -8,6 +8,7 @@ interface NewsApi{
     suspend fun getTopStories(
         @Query("api_token") apiKey: String,
         @Query("categories") category: String,
-        @Query("locale") locale: String = "us"
+        @Query("locale") locale: String = "us",
+
     ): NewsResponse
 }

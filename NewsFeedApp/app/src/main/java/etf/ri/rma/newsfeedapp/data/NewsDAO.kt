@@ -1,5 +1,6 @@
 package etf.ri.rma.newsfeedapp.data
 
+import android.util.Log
 import com.google.gson.annotations.SerializedName
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import retrofit2.Retrofit
@@ -48,10 +49,20 @@ class NewsDAO(private val apiKey: String) {
         require(category in allowedCategories) { "Invalid category" }
 
         val response = RetrofitInstance.api.getTopStories(apiKey, category)
-        val top3 = response.data.take(3)
-        cachedStories.addAll(top3)
-        return top3.map { it.toModel() }
+        Log.d("NewsDAO", "API odgovor za $category: ${response.data.size} stavki")
+        response.data.forEach { Log.d("NewsDAO", it.title) }
+        val newStories = response.data
+
+        newStories.forEach { newItem ->
+            if (cachedStories.none { it.uuid == newItem.uuid }) {
+                cachedStories.add(newItem)
+            }
+        }
+
+        return newStories.map { it.toModel() }
     }
+
+
 
     fun getAllStories(): List<NewsItem> {
         return cachedStories.map { it.toModel() }
@@ -68,13 +79,15 @@ class NewsDAO(private val apiKey: String) {
         return sameCategory.take(2).map { it.toModel() }
     }
 }
-    fun NewsItemApi.toModel(): NewsItem {
+fun NewsItemApi.toModel(): NewsItem {
+    val extractedCategory = this.category?.split(",")?.firstOrNull()?.trim() ?: "unknown"
+
     return NewsItem(
         uuid = this.uuid,
         title = this.title,
         snippet = this.description ?: "No description available",
         imageUrl = this.imageUrl,
-        category = this.category,
+        category = extractedCategory,
         isFeatured = false,
         source = this.url ?: "",
         publishedDate = this.publishedAt,

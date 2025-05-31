@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import etf.ri.rma.newsfeedapp.data.NewsData
 import android.icu.text.SimpleDateFormat
 import androidx.compose.runtime.produceState
+import etf.ri.rma.newsfeedapp.data.NewsRepository
 import etf.ri.rma.newsfeedapp.model.NewsItem
 import java.util.Date
 import java.util.Locale
@@ -34,17 +35,26 @@ fun NewsFeedScreen(navController: NavController) {
 
 
     var chosenCategory by remember { mutableStateOf(appliedCategory ?: "Sve") }
+    val internalCategory = when (chosenCategory) {
+        "Politika" -> "politics"
+        "Sport" -> "sports"
+        "Nauka/tehnologija" -> "science"
+        "Kultura" -> "entertainment"
+        else -> "general"
+    }
 
-    val newsList by produceState<List<NewsItem>>(emptyList()) {
-        value = NewsData.getAllNews()
+    val newsList by produceState<List<NewsItem>>(emptyList(), chosenCategory) {
+        value = if (chosenCategory == "Sve") {
+            NewsRepository.getAllCachedNews()
+        } else {
+            NewsRepository.getNewsByCategory(internalCategory)
+        }
     }
-    val filteredByCategory = when (chosenCategory) {
-        "Politika" -> newsList.filter { it.category == "politics" }
-        "Sport" -> newsList.filter { it.category == "sports" }
-        "Nauka/tehnologija" -> newsList.filter { it.category == "science" }
-        "Kultura" -> newsList.filter { it.category == "culture" }
-        else -> newsList
-    }
+
+
+
+    val filteredByCategory = newsList
+
 
     val filteredByDate = appliedDateRange?.takeIf { it.contains(";") }?.let { range ->
         val (startStr, endStr) = range.split(";")
