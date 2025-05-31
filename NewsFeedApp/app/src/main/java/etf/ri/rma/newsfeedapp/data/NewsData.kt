@@ -17,7 +17,7 @@ object NewsData {
                 category = "sports",
                 isFeatured = false,
                 source = "sportsnet.ca",
-                publishedDate = "2025-05-29T23:07:48.000000Z",
+                publishedDate = "29-05-2025",
                 imageTags = arrayListOf()
             ),
             NewsItem(
@@ -28,7 +28,7 @@ object NewsData {
                 category="entertainment",
                 isFeatured=false,
                 source="vladtv.com",
-                publishedDate="2025-05-29T23:46:49.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -39,7 +39,7 @@ object NewsData {
                 category="tech",
                 isFeatured=true,
                 source="interestingengineering.com",
-                publishedDate="2025-05-29T23:41:20.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -50,7 +50,7 @@ object NewsData {
                 category="business",
                 isFeatured=false,
                 source="gurufocus.com",
-                publishedDate="2025-05-29T23:56:03.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -61,7 +61,7 @@ object NewsData {
                 category="food",
                 isFeatured=false,
                 source="vegnews.com",
-                publishedDate="2025-05-29T22:56:00.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -72,7 +72,7 @@ object NewsData {
                 category="general",
                 isFeatured=false,
                 source="cbc.ca",
-                publishedDate="2025-05-30T00:00:00.000000Z",
+                publishedDate="30-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -83,7 +83,7 @@ object NewsData {
                 category="science",
                 isFeatured=false,
                 source="interestingengineering.com",
-                publishedDate="2025-05-29T23:37:41.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -94,7 +94,7 @@ object NewsData {
                 category="health",
                 isFeatured=false,
                 source="crossfitinvictus.com",
-                publishedDate="2025-05-29T23:00:50.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -105,7 +105,7 @@ object NewsData {
                 category="politics",
                 isFeatured=true,
                 source="wnd.com",
-                publishedDate="2025-05-29T23:44:15.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             ),
             NewsItem(
@@ -116,7 +116,7 @@ object NewsData {
                 category="travel",
                 isFeatured=false,
                 source="hospitalitytech.com",
-                publishedDate="2025-05-29T23:34:27.000000Z",
+                publishedDate="29-05-2025",
                 imageTags=arrayListOf()
             )
         )

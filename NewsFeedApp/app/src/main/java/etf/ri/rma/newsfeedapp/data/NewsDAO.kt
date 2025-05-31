@@ -7,6 +7,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 data class NewsResponse(
     @SerializedName("data") val data: List<NewsItemApi>
@@ -49,8 +52,6 @@ class NewsDAO(private val apiKey: String) {
         require(category in allowedCategories) { "Invalid category" }
 
         val response = RetrofitInstance.api.getTopStories(apiKey, category)
-        Log.d("NewsDAO", "API odgovor za $category: ${response.data.size} stavki")
-        response.data.forEach { Log.d("NewsDAO", it.title) }
         val newStories = response.data
 
         newStories.forEach { newItem ->
@@ -82,6 +83,15 @@ class NewsDAO(private val apiKey: String) {
 fun NewsItemApi.toModel(): NewsItem {
     val extractedCategory = this.category?.split(",")?.firstOrNull()?.trim() ?: "unknown"
 
+    // Format publishedAt from ISO to dd-MM-yyyy
+    val extractedDate = try {
+        val zonedDateTime = ZonedDateTime.parse(this.publishedAt)
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        zonedDateTime.format(formatter)
+    } catch (e: DateTimeParseException) {
+        "unknown"
+    }
+
     return NewsItem(
         uuid = this.uuid,
         title = this.title,
@@ -90,9 +100,8 @@ fun NewsItemApi.toModel(): NewsItem {
         category = extractedCategory,
         isFeatured = false,
         source = this.url ?: "",
-        publishedDate = this.publishedAt,
+        publishedDate = extractedDate,
         imageTags = arrayListOf()
     )
 }
-
 class InvalidUUIDException(message: String) : Exception(message)
