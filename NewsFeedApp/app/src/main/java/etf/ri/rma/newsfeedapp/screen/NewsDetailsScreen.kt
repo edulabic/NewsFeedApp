@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextDecoration
@@ -40,17 +41,25 @@ fun NewsDetailsScreen(
     val newsList by produceState<List<NewsItem>>(emptyList()) {
         value = NewsData.getAllNews()
     }
-    val currentNews = remember(newsId) { newsList.find { it.uuid == newsId } }
 
-    // State za tagove slike
     var imageTags by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoadingTags by remember { mutableStateOf(false) }
     var tagsError by remember { mutableStateOf<String?>(null) }
 
-    // State za slične vijesti
     var similarNews by remember { mutableStateOf<List<NewsItem>>(emptyList()) }
     var isLoadingSimilar by remember { mutableStateOf(false) }
     var similarError by remember { mutableStateOf<String?>(null) }
+
+    val currentNews = remember(newsId, newsList) {
+        newsList.find { it.uuid == newsId }
+    }
+
+    if (newsList.isEmpty()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     if (currentNews == null) {
         Text("Vijest nije pronađena.")
@@ -59,6 +68,7 @@ fun NewsDetailsScreen(
         }
         return
     }
+
 
     LaunchedEffect(currentNews.uuid) {
         if (!currentNews.imageUrl.isNullOrEmpty()) {
