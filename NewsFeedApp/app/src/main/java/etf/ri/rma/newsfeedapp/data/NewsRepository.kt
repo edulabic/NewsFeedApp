@@ -9,11 +9,9 @@ import etf.ri.rma.newsfeedapp.model.NewsItem
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import android.util.Log // Import Log for better debugging
-
+import android.util.Log
 object NewsRepository {
     private val dao = NewsDAO()
-    // Using a ConcurrentHashMap for thread-safe access if multiple coroutines modify it
     private val cache = mutableMapOf<String, NewsItem>()
     private val categoryLastFetch = mutableMapOf<String, Long>()
 
@@ -150,13 +148,12 @@ object NewsRepository {
                     }
                 }
             }
-            // Add initial news items to the cache using their UUID as key
+
             initialNewsItems.forEach { cache[it.uuid] = it }
             Log.d("NewsRepository", "Initial news items loaded into cache.")
         }
     }
 
-    // Returns a list of all cached news items
     fun getAllCachedNews(): List<NewsItem> = cache.values.toList()
 
     suspend fun getNewsByCategory(category: String): List<NewsItem> {
@@ -168,7 +165,7 @@ object NewsRepository {
 
         if (within30Sec) {
             Log.d("NewsRepository", "Returning cached news for category $category (within 30s timeout)")
-            return currentCachedCategoryNews.map { it.copy(isFeatured = false) } // Ensure isFeatured is correct for display
+            return currentCachedCategoryNews.map { it.copy(isFeatured = false) }
         }
 
         try {
@@ -176,13 +173,12 @@ object NewsRepository {
             categoryLastFetch[category] = now
             val resultListForDisplay = mutableListOf<NewsItem>()
 
-            // Populate image tags for new items from API and add to cache
             coroutineScope {
                 newItemsFromApi.forEach { apiItem ->
                     launch {
                         apiItem.imageUrl?.let { url ->
                             try {
-                                if (apiItem.imageTags.isEmpty()) { // Only fetch if not already populated
+                                if (apiItem.imageTags.isEmpty()) {
                                     val tags = ImagaDAO().getTags(url)
                                     apiItem.imageTags.addAll(tags)
                                     Log.d("NewsRepository", "Fetched API item tags for ${apiItem.title}: $tags")
@@ -205,14 +201,12 @@ object NewsRepository {
             }.map { it.copy(isFeatured = false) }
             resultListForDisplay.addAll(nonFeaturedNewItems)
 
-            // Update the global cache with fetched and processed news
             resultListForDisplay.forEach { cache[it.uuid] = it }
             Log.d("NewsRepository", "Fetched new news for category $category. Total in cache: ${cache.size}")
 
-            return resultListForDisplay.sortedByDescending { it.publishedDate } // Sort by date for consistent display
+            return resultListForDisplay.sortedByDescending { it.publishedDate }
         } catch (e: Exception) {
             Log.e("NewsRepository", "Greška prilikom dohvaćanja vijesti iz kategorije '$category': ${e.message}")
-            // If API call fails, return existing cached news for that category, ensuring isFeatured is false.
             return currentCachedCategoryNews.map { it.copy(isFeatured = false) }
         }
     }
@@ -222,11 +216,9 @@ object NewsRepository {
             throw InvalidUUIDException("Invalid UUID format: $uuid")
         }
 
-        // Try to get similar stories from the API first
         try {
             val similarFromApi = dao.getSimilarStories(uuid)
             if (similarFromApi.isNotEmpty()) {
-                // Update image tags for similar stories fetched from API
                 coroutineScope {
                     similarFromApi.forEach { newsItem ->
                         launch {
@@ -246,17 +238,15 @@ object NewsRepository {
                         }
                     }
                 }
-                // Add these to the cache if not already present
                 similarFromApi.forEach { cache[it.uuid] = it }
                 return similarFromApi
             }
         } catch (e: Exception) {
             Log.e("NewsRepository", "Error fetching similar stories from API for UUID $uuid: ${e.message}")
-            // Fallback to local cache if API call fails
+
         }
 
-        // Fallback: If API call fails or returns empty, try to find similar by category from local cache
-        val reference = cache[uuid] ?: return emptyList() // Use cache.get(uuid)
+        val reference = cache[uuid] ?: return emptyList()
         val sameCategory = cache.values.filter { it.category == reference.category && it.uuid != uuid }
         return sameCategory.take(2).toList()
     }

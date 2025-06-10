@@ -24,13 +24,14 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
-import android.util.Log // Import Log for debugging
+import android.util.Log
 import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
-import etf.ri.rma.newsfeedapp.data.network.NewsDAO // This NewsDAO import is still okay, but NewsRepository abstracts it now.
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
@@ -42,17 +43,9 @@ fun NewsDetailsScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // We still observe all cached news, but we'll also try to fetch the specific news if not found.
     val newsList by produceState<List<NewsItem>>(emptyList()) {
         value = NewsRepository.getAllCachedNews()
-        // If newsId is not found in initial cache, try to fetch its category and update cache
         if (newsId != null && value.find { it.uuid == newsId } == null) {
-            // This is a more complex scenario. If a direct link is used,
-            // the app might not have fetched the specific category yet.
-            // For simplicity in this screen, we'll assume the item should be in the cache
-            // or the navigation provides a fallback.
-            // A more robust solution might fetch the specific news item by UUID if not found.
-            // For now, if newsId is provided but currentNews is null, it displays "Vijest nije pronađena."
         }
     }
 
@@ -72,7 +65,6 @@ fun NewsDetailsScreen(
     var isLoadingNextNews by remember { mutableStateOf(false) }
     var nextNewsError by remember { mutableStateOf<String?>(null) }
 
-    // Display loading or not found if currentNews is null
     if (currentNews == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (newsList.isEmpty()) {
@@ -86,7 +78,6 @@ fun NewsDetailsScreen(
     }
 
     LaunchedEffect(currentNews.uuid) {
-        // Fetch image tags if not already present or if we need to refresh
         if (!currentNews.imageUrl.isNullOrEmpty() && currentNews.imageTags.isEmpty()) {
             isLoadingTags = true
             tagsError = null
@@ -94,7 +85,6 @@ fun NewsDetailsScreen(
                 val imagaDAO = ImagaDAO()
                 val tags = imagaDAO.getTags(currentNews.imageUrl)
                 imageTags = tags
-                // Optionally, update the NewsItem in the repository's cache
                 NewsRepository.getAllCachedNews().find { it.uuid == currentNews.uuid }?.imageTags?.addAll(tags)
                 Log.d("NewsDetailsScreen", "Fetched image tags for ${currentNews.title}: $tags")
             } catch (e: InvalidImageURLException) {
@@ -107,9 +97,9 @@ fun NewsDetailsScreen(
                 isLoadingTags = false
             }
         } else if (!currentNews.imageUrl.isNullOrEmpty() && currentNews.imageTags.isNotEmpty()) {
-            imageTags = currentNews.imageTags // Use already cached tags
+            imageTags = currentNews.imageTags
         } else {
-            imageTags = emptyList() // No image URL, so no tags
+            imageTags = emptyList()
         }
     }
 
@@ -117,7 +107,6 @@ fun NewsDetailsScreen(
         isLoadingSimilar = true
         similarError = null
         try {
-            // Use NewsRepository to get similar stories, which now uses NewsDAO's API call
             val similar = NewsRepository.getSimilarStories(currentNews.uuid)
             similarNews = similar
             Log.d("NewsDetailsScreen", "Fetched similar news for ${currentNews.title}: ${similar.map { it.title }}")
@@ -129,7 +118,6 @@ fun NewsDetailsScreen(
         }
     }
 
-    // Related news logic (from same category, close in date) - remains largely the same
     val relatedNews = remember(currentNews.uuid, newsList) {
         val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         val currentNewsDate = try { formatter.parse(currentNews.publishedDate) } catch (e: Exception) { null }
@@ -342,31 +330,36 @@ fun NewsDetailsScreen(
 
             Button(
                 onClick = {
+                    Log.d("OpenNextNews", "Kliknuto na dugme")
                     coroutineScope.launch {
                         isLoadingNextNews = true
                         nextNewsError = null
                         nextNewsUrl = null
                         try {
-                            // Use NewsRepository to get the next similar news URL
                             val url = NewsRepository.getFirstSimilarNewsUrlFromSource(
                                 currentNews.uuid,
                                 currentNews.source
                             )
-                            if (!url.isNullOrBlank()) {
+                            Log.d("OpenNextNews", "URL iz repozitorija: $url")
+
+                            if (!url.isNullOrBlank() && url.startsWith("http")) {
                                 nextNewsUrl = url
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                context.startActivity(intent)
+                                withContext(Dispatchers.Main) {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    context.startActivity(intent)
+                                }
                             } else {
                                 nextNewsError = "Nije pronađena vijest iz istog izvora"
                             }
                         } catch (e: Exception) {
                             nextNewsError = "Greška: ${e.message}"
-                            Log.e("NewsDetailsScreen", "Error opening next news from source: ${e.message}")
+                            Log.e("OpenNextNews", "Greška prilikom otvaranja: ${e.message}")
                         } finally {
                             isLoadingNextNews = false
                         }
                     }
-                },
+                }
+                ,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("open_next_button"),

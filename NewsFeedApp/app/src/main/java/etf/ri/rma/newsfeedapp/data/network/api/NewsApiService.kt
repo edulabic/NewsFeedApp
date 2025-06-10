@@ -20,11 +20,11 @@ interface NewsApiService{
         @Query("api_token") apiKey: String = "Jty4AzGDU4uF8ImaRbXhdpqZ1XcQuE5rLxhhLl6H"
     ): NewsResponse
 
-    @GET("news/similar")
+    @GET("news/top")
     suspend fun getSimilarWithSource(
         @Query("uuid") uuid: String,
         @Query("source") source: String,
-        @Query("api_token") apiKey: String = "Jty4AzGDU4uFF8ImaRbXhdpqZ1XcQuE5rLxhhLl6H"
+        @Query("api_token") apiKey: String = "Jty4AzGDU4uF8ImaRbXhdpqZ1XcQuE5rLxhhLl6H"
     ): NewsResponse
 
 }
