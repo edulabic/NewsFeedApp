@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName
 import etf.ri.rma.newsfeedapp.data.network.api.NewsApiService
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidUUIDException
 import etf.ri.rma.newsfeedapp.model.NewsItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.ZonedDateTime
@@ -83,6 +85,8 @@ class NewsDAO {
     fun getAllStories(): List<NewsItem> {
         return cachedCategoryStories.values.flatMap { it.second }
     }
+
+
     private val similarCache: MutableMap<String, List<NewsItem>> = mutableMapOf()
 
     suspend fun getSimilarStories(uuid: String): List<NewsItem> {
@@ -101,6 +105,29 @@ class NewsDAO {
         return newsList
     }
 
+
+    suspend fun getSimilarWithSource(uuidnews: String, source: String): String? = withContext(
+        Dispatchers.IO){
+        if (!uuidnews.matches(Regex("^[0-9a-fA-F-]{36}$"))) {
+            throw InvalidUUIDException("Neispravan uuid!")
+        }
+
+        try {
+            val response = api.getSimilarWithSource(uuidnews, source)
+
+            if (response.data.isNotEmpty()) {
+                response.data[0].url
+            } else {
+                null
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            println("Nema vijesti : $uuidnews, source: $source")
+            null
+        } catch (e: Exception) {
+            println("Greska: ${e.message}")
+            null
+        }
+    }
 
 }
 

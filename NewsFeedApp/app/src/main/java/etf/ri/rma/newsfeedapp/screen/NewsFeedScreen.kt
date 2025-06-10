@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import etf.ri.rma.newsfeedapp.data.NewsData
 import android.icu.text.SimpleDateFormat
 import androidx.compose.runtime.produceState
 import etf.ri.rma.newsfeedapp.data.NewsRepository

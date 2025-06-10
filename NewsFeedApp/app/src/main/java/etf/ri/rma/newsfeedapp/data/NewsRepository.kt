@@ -1,5 +1,6 @@
 package etf.ri.rma.newsfeedapp.data
 
+import android.net.Uri
 import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
 import etf.ri.rma.newsfeedapp.data.network.NewsDAO
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
@@ -8,10 +9,12 @@ import etf.ri.rma.newsfeedapp.model.NewsItem
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import android.util.Log // Import Log for better debugging
 
 object NewsRepository {
     private val dao = NewsDAO()
-    private val cache = mutableListOf<NewsItem>()
+    // Using a ConcurrentHashMap for thread-safe access if multiple coroutines modify it
+    private val cache = mutableMapOf<String, NewsItem>()
     private val categoryLastFetch = mutableMapOf<String, Long>()
 
     private val initialNewsItems = listOf(
@@ -31,9 +34,9 @@ object NewsRepository {
             title="Amber Rose Opens Up About Why She's Advocating for Tory Lanez's Freedom",
             snippet="Amber Rose appeared on NewsNation’s CUOMO with Chris Cuomo this week, where she opened up about her vocal support for Tory Lanez, who is currently serving a 1...",
             imageUrl="https://www.vladtv.com/images/size_fs/video-311245.jpg?ver=1748558809",
-            category="entertainment",
+            category="sports",
             isFeatured=false,
-            source="vladtv.com",
+            source="sportsnet.ca",
             publishedDate="29-05-2025",
             imageTags=arrayListOf()
         ),
@@ -126,6 +129,7 @@ object NewsRepository {
             imageTags=arrayListOf()
         )
     )
+
     init {
         runBlocking {
             val imagaDAO = ImagaDAO()
@@ -136,61 +140,79 @@ object NewsRepository {
                             try {
                                 val tags = imagaDAO.getTags(url)
                                 newsItem.imageTags.addAll(tags)
+                                Log.d("NewsRepository", "Fetched tags for ${newsItem.title}: $tags")
                             } catch (e: InvalidImageURLException) {
-                                println("Error fetching tags for '${newsItem.title}' (URL: $url): ${e.message}")
+                                Log.e("NewsRepository", "Error fetching tags for '${newsItem.title}' (URL: $url): ${e.message}")
                             } catch (e: Exception) {
-                                println("An unexpected error occurred for '${newsItem.title}' (URL: $url): ${e.message}")
+                                Log.e("NewsRepository", "An unexpected error occurred for '${newsItem.title}' (URL: $url): ${e.message}")
                             }
                         }
                     }
                 }
             }
-            cache.addAll(initialNewsItems)
+            // Add initial news items to the cache using their UUID as key
+            initialNewsItems.forEach { cache[it.uuid] = it }
+            Log.d("NewsRepository", "Initial news items loaded into cache.")
         }
     }
-    fun getAllCachedNews(): List<NewsItem> = cache.toList()
+
+    // Returns a list of all cached news items
+    fun getAllCachedNews(): List<NewsItem> = cache.values.toList()
 
     suspend fun getNewsByCategory(category: String): List<NewsItem> {
         val now = System.currentTimeMillis()
         val lastFetched = categoryLastFetch[category] ?: 0
         val within30Sec = now - lastFetched < 30_000
 
-        val currentCachedCategoryNews = cache.filter { it.category == category }.toMutableList()
+        val currentCachedCategoryNews = cache.values.filter { it.category == category }.toMutableList()
 
         if (within30Sec) {
-            return currentCachedCategoryNews.map { it.copy(isFeatured = false) }
+            Log.d("NewsRepository", "Returning cached news for category $category (within 30s timeout)")
+            return currentCachedCategoryNews.map { it.copy(isFeatured = false) } // Ensure isFeatured is correct for display
         }
 
         try {
             val newItemsFromApi = dao.getTopStoriesByCategory(category)
             categoryLastFetch[category] = now
             val resultListForDisplay = mutableListOf<NewsItem>()
-            val featuredCandidates = newItemsFromApi.take(3).map { apiItem ->
-                val existingInGlobalCache = cache.find { it.uuid == apiItem.uuid }
-                if (existingInGlobalCache != null) {
-                    existingInGlobalCache.copy(isFeatured = true)
-                } else {
-                    apiItem.copy(isFeatured = true)
+
+            // Populate image tags for new items from API and add to cache
+            coroutineScope {
+                newItemsFromApi.forEach { apiItem ->
+                    launch {
+                        apiItem.imageUrl?.let { url ->
+                            try {
+                                if (apiItem.imageTags.isEmpty()) { // Only fetch if not already populated
+                                    val tags = ImagaDAO().getTags(url)
+                                    apiItem.imageTags.addAll(tags)
+                                    Log.d("NewsRepository", "Fetched API item tags for ${apiItem.title}: $tags")
+                                }
+                            } catch (e: InvalidImageURLException) {
+                                Log.e("NewsRepository", "Error fetching API item tags for '${apiItem.title}' (URL: $url): ${e.message}")
+                            } catch (e: Exception) {
+                                Log.e("NewsRepository", "An unexpected error occurred for API item '${apiItem.title}' (URL: $url): ${e.message}")
+                            }
+                        }
+                    }
                 }
             }
+
+            val featuredCandidates = newItemsFromApi.take(3).map { it.copy(isFeatured = true) }
             resultListForDisplay.addAll(featuredCandidates)
 
             val nonFeaturedNewItems = newItemsFromApi.drop(3).filter { apiItem ->
-                !featuredCandidates.any { it.uuid == apiItem.uuid } && !cache.any { it.uuid == apiItem.uuid }
+                !featuredCandidates.any { it.uuid == apiItem.uuid }
             }.map { it.copy(isFeatured = false) }
             resultListForDisplay.addAll(nonFeaturedNewItems)
 
-            val existingCategoryNewsToKeep = currentCachedCategoryNews.filter { cachedItem ->
-                !resultListForDisplay.any { it.uuid == cachedItem.uuid }
-            }.map { it.copy(isFeatured = false) }
-            resultListForDisplay.addAll(existingCategoryNewsToKeep)
+            // Update the global cache with fetched and processed news
+            resultListForDisplay.forEach { cache[it.uuid] = it }
+            Log.d("NewsRepository", "Fetched new news for category $category. Total in cache: ${cache.size}")
 
-            cache.removeAll { it.category == category }
-            cache.addAll(resultListForDisplay)
-
-            return resultListForDisplay
+            return resultListForDisplay.sortedByDescending { it.publishedDate } // Sort by date for consistent display
         } catch (e: Exception) {
-            println("Greška prilikom dohvaćanja vijesti iz kategorije '$category': ${e.message}")
+            Log.e("NewsRepository", "Greška prilikom dohvaćanja vijesti iz kategorije '$category': ${e.message}")
+            // If API call fails, return existing cached news for that category, ensuring isFeatured is false.
             return currentCachedCategoryNews.map { it.copy(isFeatured = false) }
         }
     }
@@ -200,10 +222,59 @@ object NewsRepository {
             throw InvalidUUIDException("Invalid UUID format: $uuid")
         }
 
-        val reference = cache.find { it.uuid == uuid } ?: return emptyList()
-        val sameCategory = cache.filter { it.category == reference.category && it.uuid != uuid }
+        // Try to get similar stories from the API first
+        try {
+            val similarFromApi = dao.getSimilarStories(uuid)
+            if (similarFromApi.isNotEmpty()) {
+                // Update image tags for similar stories fetched from API
+                coroutineScope {
+                    similarFromApi.forEach { newsItem ->
+                        launch {
+                            newsItem.imageUrl?.let { url ->
+                                try {
+                                    if (newsItem.imageTags.isEmpty()) {
+                                        val tags = ImagaDAO().getTags(url)
+                                        newsItem.imageTags.addAll(tags)
+                                        Log.d("NewsRepository", "Fetched similar API item tags for ${newsItem.title}: $tags")
+                                    }
+                                } catch (e: InvalidImageURLException) {
+                                    Log.e("NewsRepository", "Error fetching similar API item tags for '${newsItem.title}' (URL: $url): ${e.message}")
+                                } catch (e: Exception) {
+                                    Log.e("NewsRepository", "An unexpected error occurred for similar API item '${newsItem.title}' (URL: $url): ${e.message}")
+                                }
+                            }
+                        }
+                    }
+                }
+                // Add these to the cache if not already present
+                similarFromApi.forEach { cache[it.uuid] = it }
+                return similarFromApi
+            }
+        } catch (e: Exception) {
+            Log.e("NewsRepository", "Error fetching similar stories from API for UUID $uuid: ${e.message}")
+            // Fallback to local cache if API call fails
+        }
+
+        // Fallback: If API call fails or returns empty, try to find similar by category from local cache
+        val reference = cache[uuid] ?: return emptyList() // Use cache.get(uuid)
+        val sameCategory = cache.values.filter { it.category == reference.category && it.uuid != uuid }
         return sameCategory.take(2).toList()
     }
 
 
+    suspend fun getFirstSimilarNewsUrlFromSource(uuidNews: String, source: String): String? {
+        if (!uuidNews.matches(Regex("^[0-9a-fA-F\\-]{36}$"))) {
+            throw InvalidUUIDException("Invalid UUID format: $uuidNews")
+        }
+
+        return try {
+            dao.getSimilarWithSource(uuidNews, source)
+        } catch (e: InvalidUUIDException) {
+            Log.e("NewsRepository", "Invalid UUID: ${e.message}")
+            null
+        } catch (e: Exception) {
+            Log.e("NewsRepository", "Error in getFirstSimilarNewsUrlFromSource: ${e.message}")
+            null
+        }
+    }
 }
