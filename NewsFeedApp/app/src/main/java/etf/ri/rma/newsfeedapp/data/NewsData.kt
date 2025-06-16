@@ -8,7 +8,6 @@ import etf.ri.rma.newsfeedapp.model.NewsItem
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
 object NewsData {
     suspend fun getAllNews(): List<NewsItem> {
         val newsItems = mutableListOf(

@@ -1,7 +1,6 @@
 package etf.ri.rma.newsfeedapp.data.network.api
 
 import etf.ri.rma.newsfeedapp.data.network.NewsResponse
-import etf.ri.rma.newsfeedapp.model.NewsItem
 import retrofit2.http.GET
 import retrofit2.http.Query
 
