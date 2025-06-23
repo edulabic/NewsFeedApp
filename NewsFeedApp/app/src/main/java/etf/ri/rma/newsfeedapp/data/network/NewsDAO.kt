@@ -115,7 +115,8 @@ fun NewsItemApi.toModel(): NewsItem {
         "unknown"
     }
 
-    return NewsItem(
+
+    val newsItem = NewsItem(
         uuid = this.uuid,
         title = this.title,
         snippet = this.description ?: "No description available",
@@ -123,7 +124,9 @@ fun NewsItemApi.toModel(): NewsItem {
         category = extractedCategory,
         isFeatured = false,
         source = this.url ?: "",
-        publishedDate = extractedDate,
-        imageTags = arrayListOf()
+        publishedDate = extractedDate
     )
+    newsItem.imageTags = arrayListOf()
+
+    return newsItem
 }

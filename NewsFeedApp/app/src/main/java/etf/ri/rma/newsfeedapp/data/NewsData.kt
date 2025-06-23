@@ -1,5 +1,5 @@
 package etf.ri.rma.newsfeedapp.data
-
+/*
 import androidx.compose.runtime.sourceInformationMarkerEnd
 import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
@@ -159,3 +159,4 @@ object NewsData {
     }
 }
 
+*/

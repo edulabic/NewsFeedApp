@@ -21,7 +21,7 @@ data class Tag(
 
 class ImagaDAO {
     private val BASE_URL = "https://api.imagga.com/"
-    private val AUTH_KEY = "acc_9423c9d71b1e36e:7fa4c117596c3f705f24b7e9012caf1a"
+    private val AUTH_KEY = "acc_1581afe2b77fe47:42c9b171181853de0dbfeb874dcc4ce1"
     private val cache = mutableMapOf<String, List<String>>()
 
     private var externalApi: ImagaApiService? = null

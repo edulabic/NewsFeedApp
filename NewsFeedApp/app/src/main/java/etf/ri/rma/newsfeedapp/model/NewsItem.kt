@@ -1,7 +1,7 @@
 package etf.ri.rma.newsfeedapp.model
 
 import androidx.room.*
-data class NewsItem(
+/*data class NewsItem(
     val uuid: String,
     val title: String,
     val snippet: String,
@@ -11,11 +11,13 @@ data class NewsItem(
     val source: String,
     val publishedDate: String,
     var imageTags: ArrayList<String> = arrayListOf()
-)
+)*/
+
+
 @Entity(tableName = "News")
-data class NewsEntity(
+data class NewsItem(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    @ColumnInfo(name = "uuid") val uuid: String,
+    val uuid: String,
     val title: String,
     val snippet: String,
     val imageUrl: String?,
@@ -38,7 +40,7 @@ data class TagEntity(
     tableName = "NewsTags",
     primaryKeys = ["newsId", "tagId"],
     foreignKeys = [
-        ForeignKey(entity = NewsEntity::class, parentColumns = ["id"], childColumns = ["newsId"]),
+        ForeignKey(entity = NewsItem::class, parentColumns = ["id"], childColumns = ["newsId"]),
         ForeignKey(entity = TagEntity::class, parentColumns = ["id"], childColumns = ["tagId"])
     ],
     indices = [Index("newsId"), Index("tagId")]
@@ -49,7 +51,7 @@ data class NewsTagsCrossRef(
 )
 
 data class NewsWithTags(
-    @Embedded val news: NewsEntity,
+    @Embedded val news: NewsItem,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
@@ -73,5 +75,5 @@ data class TagWithNews(
             entityColumn = "newsId"
         )
     )
-    val newsList: List<NewsEntity>
+    val newsList: List<NewsItem>
 )

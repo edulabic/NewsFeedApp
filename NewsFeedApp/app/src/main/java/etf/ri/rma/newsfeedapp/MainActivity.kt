@@ -18,6 +18,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import etf.ri.rma.newsfeedapp.data.NewsDatabase
+import etf.ri.rma.newsfeedapp.data.NewsRepository
 import etf.ri.rma.newsfeedapp.screen.FilterScreen
 import etf.ri.rma.newsfeedapp.screen.NewsDetailsScreen
 import etf.ri.rma.newsfeedapp.screen.NewsFeedScreen
@@ -27,16 +29,19 @@ import etf.ri.rma.newsfeedapp.ui.theme.NewsFeedAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val database = NewsDatabase.getDatabase(this)
+        NewsRepository.initialize(database)
+
         enableEdgeToEdge()
         setContent {
             NewsFeedAppTheme {
                 val navController = rememberNavController()
                 AppNavGraph(navController)
             }
-            }
         }
     }
-
+}
 @Composable
 fun AppNavGraph(navController: NavController) {
 

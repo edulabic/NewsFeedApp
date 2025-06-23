@@ -8,11 +8,16 @@ import etf.ri.rma.newsfeedapp.model.NewsItem
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-
 object NewsRepository {
     private val dao = NewsDAO()
     private val cache = mutableListOf<NewsItem>()
     private val categoryLastFetch = mutableMapOf<String, Long>()
+
+    private lateinit var newsDatabase: NewsDatabase
+
+    fun initialize(database: NewsDatabase) {
+        this.newsDatabase = database
+    }
 
     private val initialNewsItems = listOf(
         NewsItem(
@@ -24,7 +29,7 @@ object NewsRepository {
             isFeatured = false,
             source = "sportsnet.ca",
             publishedDate = "29-05-2025",
-            imageTags = arrayListOf()
+            //imageTags = arrayListOf()
         ),
         NewsItem(
             uuid="783b0d47-f15f-49a8-b9fb-6a5b2d03d89e",
@@ -35,7 +40,7 @@ object NewsRepository {
             isFeatured=false,
             source="vladtv.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="718b1e2e-333e-49f1-8203-a5a14cb8c3f1",
@@ -46,7 +51,7 @@ object NewsRepository {
             isFeatured=true,
             source="interestingengineering.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="e1f2cba9-2486-4bb6-a8ae-25b00ae750d0",
@@ -57,7 +62,7 @@ object NewsRepository {
             isFeatured=false,
             source="gurufocus.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="a67e699e-88e8-4cd8-9498-41cc1def5108",
@@ -68,7 +73,7 @@ object NewsRepository {
             isFeatured=false,
             source="vegnews.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="249d681b-a5e5-4dc7-a636-02dc5e149e2a",
@@ -79,7 +84,7 @@ object NewsRepository {
             isFeatured=false,
             source="cbc.ca",
             publishedDate="30-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="4b74a528-7e48-48fe-9705-6120c3990e70",
@@ -90,7 +95,7 @@ object NewsRepository {
             isFeatured = false,
             source="interestingengineering.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="b55bfcd4-3b8d-42a5-aef8-2149339d50be",
@@ -101,7 +106,7 @@ object NewsRepository {
             isFeatured=false,
             source="crossfitinvictus.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="1dcb5198-5005-4dbf-a52c-d1b8bebe9220",
@@ -112,7 +117,7 @@ object NewsRepository {
             isFeatured=true,
             source="wnd.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            // imageTags=arrayListOf()
         ),
         NewsItem(
             uuid="40290076-a8b6-49e9-9815-bbc4bccbaefd",
@@ -123,7 +128,7 @@ object NewsRepository {
             isFeatured=false,
             source="hospitalitytech.com",
             publishedDate="29-05-2025",
-            imageTags=arrayListOf()
+            //imageTags=arrayListOf()
         )
     )
     init {
@@ -148,7 +153,6 @@ object NewsRepository {
             cache.addAll(initialNewsItems)
         }
     }
-    fun getAllCachedNews(): List<NewsItem> = cache.toList()
 
     suspend fun getNewsByCategory(category: String): List<NewsItem> {
         val now = System.currentTimeMillis()
@@ -162,9 +166,38 @@ object NewsRepository {
         }
 
         try {
+            println("→ Pokušavam dohvatiti vijesti za kategoriju: $category")
             val newItemsFromApi = dao.getTopStoriesByCategory(category)
+            println("← Dohvaćeno ${newItemsFromApi.size} vijesti sa API-ja")
+
             categoryLastFetch[category] = now
+
+            coroutineScope {
+                newItemsFromApi.forEach { newsItem ->
+                    launch {
+                        val saved = newsDatabase.savedNewsDAO().saveNews(newsItem)
+                        if (saved) {
+                            println("Vijest '${newsItem.title}' je snimljena u bazu")
+
+                            newsItem.imageUrl?.let { imageUrl ->
+                                try {
+                                    val imagaDAO = ImagaDAO()
+                                    val tags = imagaDAO.getTags(imageUrl)
+                                    newsItem.imageTags.addAll(tags)
+
+                                    val newTagsCount = newsDatabase.savedNewsDAO().addTags(tags, newsItem.id.toInt())
+                                    println("Dodano $newTagsCount novih tagova za vijest '${newsItem.title}'")
+                                } catch (e: Exception) {
+                                    println("Error processing image tags for ${newsItem.title}: ${e.message}")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             val resultListForDisplay = mutableListOf<NewsItem>()
+
             val featuredCandidates = newItemsFromApi.take(3).map { apiItem ->
                 val existingInGlobalCache = cache.find { it.uuid == apiItem.uuid }
                 if (existingInGlobalCache != null) {
@@ -187,13 +220,19 @@ object NewsRepository {
 
             cache.removeAll { it.category == category }
             cache.addAll(resultListForDisplay)
-
             return resultListForDisplay
         } catch (e: Exception) {
             println("Greška prilikom dohvaćanja vijesti iz kategorije '$category': ${e.message}")
-            return currentCachedCategoryNews.map { it.copy(isFeatured = false) }
+
+            return try {
+                newsDatabase.savedNewsDAO().getNewsWithCategory(category)
+            } catch (dbError: Exception) {
+                currentCachedCategoryNews.map { it.copy(isFeatured = false) }
+            }
         }
     }
+
+    fun getAllCachedNews(): List<NewsItem> = cache.toList()
 
     suspend fun getSimilarStories(uuid: String): List<NewsItem> {
         if (!uuid.matches(Regex("^[0-9a-fA-F\\-]{36}$"))) {
@@ -201,9 +240,45 @@ object NewsRepository {
         }
 
         val reference = cache.find { it.uuid == uuid } ?: return emptyList()
-        val sameCategory = cache.filter { it.category == reference.category && it.uuid != uuid }
-        return sameCategory.take(2).toList()
+
+        return if (isNetworkAvailable()) {
+            val sameCategory = cache.filter { it.category == reference.category && it.uuid != uuid }
+            sameCategory.take(2).toList()
+        } else {
+            try {
+                val tagsToUse = reference.imageTags.take(2)
+                newsDatabase.savedNewsDAO().getSimilarNews(tagsToUse)
+            } catch (e: Exception) {
+                val sameCategory = cache.filter { it.category == reference.category && it.uuid != uuid }
+                sameCategory.take(2).toList()
+            }
+        }
     }
 
+    suspend fun getAllSavedNews(): List<NewsItem> {
+        return try {
+            newsDatabase.savedNewsDAO().allNews()
+        } catch (e: Exception) {
+            cache.toList()
+        }
+    }
+
+    suspend fun getSavedNewsByCategory(category: String): List<NewsItem> {
+        return try {
+            newsDatabase.savedNewsDAO().getNewsWithCategory(category)
+        } catch (e: Exception) {
+            cache.filter { it.category == category }
+        }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        return try {
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 
 }
+
+

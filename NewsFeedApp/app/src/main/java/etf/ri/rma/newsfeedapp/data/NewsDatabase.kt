@@ -1,34 +1,47 @@
 package etf.ri.rma.newsfeedapp.data
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import etf.ri.rma.newsfeedapp.model.NewsEntity
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
+import etf.ri.rma.newsfeedapp.model.NewsItem
 import etf.ri.rma.newsfeedapp.model.NewsTagsCrossRef
 import etf.ri.rma.newsfeedapp.model.TagEntity
 
-
 @Database(
-    entities = [NewsEntity::class, TagEntity::class, NewsTagsCrossRef::class],
-    version = 1
+    entities = [NewsItem::class, TagEntity::class, NewsTagsCrossRef::class],
+    version = 1,
+    exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class NewsDatabase : RoomDatabase() {
-    abstract fun newsDao(): NewsDao
+    abstract fun savedNewsDAO(): SavedNewsDAO
 
     companion object {
         @Volatile
         private var INSTANCE: NewsDatabase? = null
 
-        fun getDatabase(context: android.content.Context): NewsDatabase {
+        fun getDatabase(context: Context): NewsDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     NewsDatabase::class.java,
-                    "news-db"
+                    "news_database"
                 ).build()
                 INSTANCE = instance
                 instance
             }
         }
     }
+}
+
+class Converters {
+    @TypeConverter
+    fun fromStringList(value: List<String>): String = value.joinToString(",")
+
+    @TypeConverter
+    fun toStringList(value: String): List<String> =
+        if (value.isEmpty()) emptyList() else value.split(",")
 }
