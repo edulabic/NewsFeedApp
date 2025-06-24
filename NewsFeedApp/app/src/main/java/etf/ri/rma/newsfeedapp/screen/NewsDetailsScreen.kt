@@ -28,6 +28,7 @@ import coil.compose.AsyncImage
 import android.util.Log
 import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
+import etf.ri.rma.newsfeedapp.model.TagEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
@@ -78,7 +79,7 @@ fun NewsDetailsScreen(
         Log.d("NewsDetailsScreen", "Fetching tags and similar news for: ${currentNews.title}")
         if (!currentNews.imageUrl.isNullOrEmpty()) {
             if (currentNews.imageTags.isNotEmpty()) {
-                imageTags = currentNews.imageTags
+                var imageTags: List<TagEntity>
             } else {
                 isLoadingTags = true
                 tagsError = null

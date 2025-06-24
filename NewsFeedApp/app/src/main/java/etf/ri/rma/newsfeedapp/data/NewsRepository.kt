@@ -5,6 +5,7 @@ import etf.ri.rma.newsfeedapp.data.network.NewsDAO
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidUUIDException
 import etf.ri.rma.newsfeedapp.model.NewsItem
+import etf.ri.rma.newsfeedapp.model.TagEntity
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -140,7 +141,8 @@ object NewsRepository {
                         newsItem.imageUrl?.let { url ->
                             try {
                                 val tags = imagaDAO.getTags(url)
-                                newsItem.imageTags.addAll(tags)
+                                newsItem.imageTags = tags.map { TagEntity(value = it) }
+
                             } catch (e: InvalidImageURLException) {
                                 println("Error fetching tags for '${newsItem.title}' (URL: $url): ${e.message}")
                             } catch (e: Exception) {
@@ -183,7 +185,7 @@ object NewsRepository {
                                 try {
                                     val imagaDAO = ImagaDAO()
                                     val tags = imagaDAO.getTags(imageUrl)
-                                    newsItem.imageTags.addAll(tags)
+                                    newsItem.imageTags = tags.map { TagEntity(value = it) }
 
                                     val newTagsCount = newsDatabase.savedNewsDAO().addTags(tags, newsItem.id.toInt())
                                     println("Dodano $newTagsCount novih tagova za vijest '${newsItem.title}'")
@@ -246,8 +248,9 @@ object NewsRepository {
             sameCategory.take(2).toList()
         } else {
             try {
-                val tagsToUse = reference.imageTags.take(2)
-                newsDatabase.savedNewsDAO().getSimilarNews(tagsToUse)
+                val tagsToUse = reference.imageTags.take(2).map { it.value }
+                return newsDatabase.savedNewsDAO().getSimilarNews(tagsToUse)
+
             } catch (e: Exception) {
                 val sameCategory = cache.filter { it.category == reference.category && it.uuid != uuid }
                 sameCategory.take(2).toList()

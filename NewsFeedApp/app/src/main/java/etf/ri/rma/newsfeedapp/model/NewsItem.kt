@@ -27,7 +27,7 @@ data class NewsItem(
     val publishedDate: String
 ) {
     @Ignore
-    var imageTags: ArrayList<String> = arrayListOf()
+    var imageTags: List<TagEntity> = emptyList()
 }
 
 @Entity(tableName = "Tags")

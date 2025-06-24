@@ -48,17 +48,6 @@ interface SavedNewsDAO {
         }
     }*/
 
-    suspend fun getNewsWithCategory(category: String): List<NewsItem> {
-        val allNewsWithTags = getAllNewsWithTags()
-        return allNewsWithTags
-            .filter { it.news.category == category }
-            .map { newsWithTag ->
-                val newsItem = newsWithTag.news
-                newsItem.imageTags = ArrayList(newsWithTag.tags.map { it.value })
-                newsItem
-            }
-    }
-
     suspend fun addTags(tags: List<String>, newsId: Int): Int {
         var newTagsCount = 0
         for (tagValue in tags) {
@@ -81,26 +70,13 @@ interface SavedNewsDAO {
         return newsWithTags?.tags?.map { it.value } ?: emptyList()
     }
 
-    suspend fun getSimilarNews(tags: List<String>): List<NewsItem> {
-        val allNewsWithTags = getAllNewsWithTags()
-        return allNewsWithTags
-            .filter { newsWithTag ->
-                newsWithTag.tags.any { tag -> tags.contains(tag.value) }
-            }
-            .map { newsWithTag ->
-                val newsItem = newsWithTag.news
-                newsItem.imageTags = ArrayList(newsWithTag.tags.map { it.value })
-                newsItem
-            }
-            .sortedByDescending { it.publishedDate }
-    }
+
     @Transaction
     @Query("SELECT * FROM News")
     suspend fun getNewsWithTags(): List<NewsWithTags>
-
     fun NewsWithTags.toNewsItemWithTags(): NewsItem {
         return news.apply {
-            imageTags = ArrayList(tags.map { it.value })
+            imageTags = tags
         }
     }
 
@@ -108,6 +84,18 @@ interface SavedNewsDAO {
         return getNewsWithTags().map { it.toNewsItemWithTags() }
     }
 
+    suspend fun getNewsWithCategory(category: String): List<NewsItem> {
+        return getAllNewsWithTags()
+            .filter { it.news.category == category }
+            .map { it.toNewsItemWithTags() }
+    }
+
+    suspend fun getSimilarNews(tags: List<String>): List<NewsItem> {
+        return getAllNewsWithTags()
+            .filter { it.tags.any { tag -> tags.contains(tag.value) } }
+            .map { it.toNewsItemWithTags() }
+            .sortedByDescending { it.publishedDate }
+    }
 
 
 }

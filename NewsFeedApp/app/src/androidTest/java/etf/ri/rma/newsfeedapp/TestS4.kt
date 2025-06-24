@@ -178,14 +178,14 @@ class TestS4 {
         assertContains(tags,"prva")
         assertContains(tags,"probna")
     }
-/*
+
     @Test
     fun a11_allNewsGetsTags() = runTest {
         var allnews = savedNewsDAO.allNews().find { it.imageTags.find { it.value=="prva"}!=null}
         assertThat(allnews, `is`(notNullValue()))
         assertEquals(2,allnews!!.imageTags.size)
         assertThat(allnews.imageTags, not(hasItems(hasText("prva"))))
-    }*/
+    }
 
     @Test
     fun a12_getSimilar() = runTest {
