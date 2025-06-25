@@ -1,6 +1,10 @@
 package etf.ri.rma.newsfeedapp.screen
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,10 +30,11 @@ import kotlin.math.abs
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import etf.ri.rma.newsfeedapp.data.NewsDatabase
 import etf.ri.rma.newsfeedapp.data.network.ImagaDAO
 import etf.ri.rma.newsfeedapp.data.network.exception.InvalidImageURLException
 import etf.ri.rma.newsfeedapp.model.TagEntity
-
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
 @Composable
@@ -37,6 +42,10 @@ fun NewsDetailsScreen(
     navController: NavController,
     newsId: String?
 ) {
+    val context = LocalContext.current
+    val newsDatabase = NewsDatabase.getDatabase(context)
+
+
     val coroutineScope = rememberCoroutineScope()
 
     Log.d("NewsDetailsScreen", "Received newsId: $newsId")
@@ -68,36 +77,105 @@ fun NewsDetailsScreen(
             }
         } else {
             Text("Vijest nije pronađena.")
-            LaunchedEffect(Unit) {
-            }
         }
         return
     }
-
-
     LaunchedEffect(currentNews.uuid) {
-        Log.d("NewsDetailsScreen", "Fetching tags and similar news for: ${currentNews.title}")
+        Log.d("NewsDetailsScreen", "Fetching tags for: ${currentNews.title}")
+
         if (!currentNews.imageUrl.isNullOrEmpty()) {
             if (currentNews.imageTags.isNotEmpty()) {
-                var imageTags: List<TagEntity>
+                Log.d("NewsDetailsScreen", "Using existing tags: ${currentNews.imageTags.size}")
+                imageTags = currentNews.imageTags.map { it.value }
             } else {
                 isLoadingTags = true
                 tagsError = null
-                try {
-                    val imagaDAO = ImagaDAO()
-                    val tags = imagaDAO.getTags(currentNews.imageUrl)
-                    imageTags = tags
 
-                } catch (e: InvalidImageURLException) {
-                    tagsError = "Greška pri učitavanju tagova: ${e.message}"
+                try {
+                    val isOnline = NetworkUtils.hasInternetAccess(context)
+                    Log.d("NewsDetailsScreen", "Network available: $isOnline")
+
+                    if (isOnline) {
+                        Log.d("NewsDetailsScreen", "Fetching tags from API...")
+                        val imagaDAO = ImagaDAO()
+                        val tagsFromApi = imagaDAO.getTags(currentNews.imageUrl)
+                        Log.d("NewsDetailsScreen", "Tags from API: $tagsFromApi")
+                        imageTags = tagsFromApi
+
+                        try {
+                            val dao = newsDatabase.savedNewsDAO()
+                            dao.saveNews(currentNews)
+                            val savedNews = dao.getNewsByUuid(currentNews.uuid)
+                            if (savedNews != null) {
+                                dao.addTags(tagsFromApi, savedNews.id.toInt())
+                                Log.d("NewsDetailsScreen", "Tags saved to database")
+                            } else {
+                                Log.e("NewsDetailsScreen", "News not found in DB after save")
+                            }
+                        } catch (dbError: Exception) {
+                            Log.e("NewsDetailsScreen", "Error saving to database: ${dbError.message}")
+                        }
+
+                    } else {
+                        val dao = newsDatabase.savedNewsDAO()
+                        val savedNews = dao.getNewsByUuid(currentNews.uuid)
+                        val tagsFromDb = savedNews?.let {
+                            dao.getTags(it.id.toInt())
+                        } ?: emptyList()
+
+                        Log.d("NewsDetailsScreen", "Tags from DB: $tagsFromDb")
+                        imageTags = tagsFromDb
+                        tagsError = if (tagsFromDb.isEmpty()) {
+                            "Nema sačuvanih tagova (offline)"
+                        } else {
+                            "Korišteni tagovi iz baze (offline)"
+                        }
+                    }
+
                 } catch (e: Exception) {
-                    tagsError = "Neočekivana greška pri učitavanju tagova"
+                    Log.e("NewsDetailsScreen", "Error fetching tags from API: ${e.message}")
+                    if (e.message?.contains("coroutine scope left") != true) {
+                        try {
+                            val dao = newsDatabase.savedNewsDAO()
+                            val savedNews = dao.getNewsByUuid(currentNews.uuid)
+                            val tagsFromDb = savedNews?.let {
+                                dao.getTags(it.id.toInt())
+                            } ?: emptyList()
+
+                            Log.d("NewsDetailsScreen", "Fallback - Tags from DB: $tagsFromDb")
+                            imageTags = tagsFromDb
+                            tagsError = if (tagsFromDb.isEmpty()) {
+                                "Nema sačuvanih tagova"
+                            } else {
+                                "Korišteni tagovi iz baze (offline)"
+                            }
+                        } catch (dbError: Exception) {
+                            Log.e("NewsDetailsScreen", "Error fetching tags from DB: ${dbError.message}")
+                            tagsError = "Greška pri učitavanju tagova iz baze"
+                        }
+                    }
                 } finally {
                     isLoadingTags = false
                 }
             }
+        } else {
+            Log.d("NewsDetailsScreen", "News has no image URL, loading tags from DB...")
+            val dao = newsDatabase.savedNewsDAO()
+            val savedNews = dao.getNewsByUuid(currentNews.uuid)
+            val tagsFromDb = savedNews?.let {
+                dao.getTags(it.id.toInt())
+            } ?: emptyList()
+
+            Log.d("NewsDetailsScreen", "Tags from DB: $tagsFromDb")
+            imageTags = tagsFromDb
+            tagsError = if (tagsFromDb.isEmpty()) {
+                "Nema sačuvanih tagova (offline)"
+            } else {
+                "Korišteni tagovi iz baze (offline)"
+            }
         }
     }
+
 
     LaunchedEffect(currentNews.uuid) {
         isLoadingSimilar = true
@@ -129,9 +207,7 @@ fun NewsDetailsScreen(
                         null
                     }
                 }
-                .sortedWith(compareBy<Pair<NewsItem, Long>> { it.second }
-                    .thenBy { it.first.title }
-                )
+                .sortedWith(compareBy<Pair<NewsItem, Long>> { it.second }.thenBy { it.first.title })
                 .take(2)
                 .map { it.first }
         }
@@ -156,36 +232,13 @@ fun NewsDetailsScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            Text(
-                currentNews.title,
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.testTag("details_title")
-            )
+            Text(currentNews.title, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("details_title"))
             Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                currentNews.snippet,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.testTag("details_snippet")
-            )
+            Text(currentNews.snippet, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("details_snippet"))
             Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                "Kategorija: ${currentNews.category}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.testTag("details_category")
-            )
-            Text(
-                "Izvor: ${currentNews.source}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.testTag("details_source")
-            )
-            Text(
-                "Datum objave: ${currentNews.publishedDate}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.testTag("details_date")
-            )
-
+            Text("Kategorija: ${currentNews.category}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("details_category"))
+            Text("Izvor: ${currentNews.source}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("details_source"))
+            Text("Datum objave: ${currentNews.publishedDate}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("details_date"))
             Spacer(modifier = Modifier.height(16.dp))
 
             if (!currentNews.imageUrl.isNullOrEmpty()) {
@@ -200,65 +253,37 @@ fun NewsDetailsScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
             if (!currentNews.imageUrl.isNullOrEmpty()) {
-                Text(
-                    "Tagovi slike:",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Tagovi slike:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
-
                 when {
-                    isLoadingTags -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    tagsError != null -> {
-                        Text(
-                            tagsError!!,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    imageTags.isNotEmpty() -> {
-                        Text(
-                            imageTags.joinToString(", "),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.testTag("details_image_tags")
-                        )
-                    }
-                    else -> {
-                        Text(
-                            "Nema dostupnih tagova",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            Text(
-                "Slične vijesti:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            when {
-                isLoadingSimilar -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp)
+                    isLoadingTags -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    imageTags.isNotEmpty() -> Text(
+                        imageTags.joinToString(", "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.testTag("details_image_tags")
                     )
-                }
-                similarError != null -> {
-                    Text(
-                        similarError!!,
+                    tagsError != null -> Text(
+                        tagsError!!,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
+                    else -> Text(
+                        "Nema dostupnih tagova",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Text("Slične vijesti:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            when {
+                isLoadingSimilar -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                similarError != null -> Text(similarError!!, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 similarNews.isNotEmpty() -> {
                     similarNews.forEachIndexed { index, newsItem ->
                         Text(
@@ -270,9 +295,7 @@ fun NewsDetailsScreen(
                                 .testTag("similar_news_title_${index + 1}")
                                 .clickable {
                                     navController.navigate("/details/${newsItem.uuid}") {
-                                        popUpTo("/details/{uuid}") {
-                                            inclusive = true
-                                        }
+                                        popUpTo("/details/{uuid}") { inclusive = true }
                                         launchSingleTop = true
                                     }
                                 }
@@ -280,25 +303,14 @@ fun NewsDetailsScreen(
                         )
                     }
                 }
-                else -> {
-                    Text(
-                        "Nema sličnih vijesti",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                else -> Text("Nema sličnih vijesti", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             if (relatedNews.isNotEmpty()) {
-                Text(
-                    "Povezane vijesti iz iste kategorije",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Povezane vijesti iz iste kategorije", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
-
                 relatedNews.forEachIndexed { index, newsItem ->
                     Text(
                         newsItem.title,
@@ -309,9 +321,7 @@ fun NewsDetailsScreen(
                             .testTag("related_news_title_${index + 1}")
                             .clickable {
                                 navController.navigate("/details/${newsItem.uuid}") {
-                                    popUpTo("/details/{uuid}") {
-                                        inclusive = true
-                                    }
+                                    popUpTo("/details/{uuid}") { inclusive = true }
                                     launchSingleTop = true
                                 }
                             }
@@ -321,7 +331,6 @@ fun NewsDetailsScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
@@ -330,6 +339,40 @@ fun NewsDetailsScreen(
             ) {
                 Text("Zatvori detalje")
             }
+        }
+    }
+}
+object NetworkUtils {
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        } else {
+            @Suppress("DEPRECATION")
+            val activeNetwork = connectivityManager.activeNetworkInfo
+            activeNetwork?.isConnected == true
+        }
+    }
+
+    fun hasInternetAccess(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        } else {
+            @Suppress("DEPRECATION")
+            val activeNetwork = connectivityManager.activeNetworkInfo
+            activeNetwork?.isConnectedOrConnecting == true
         }
     }
 }

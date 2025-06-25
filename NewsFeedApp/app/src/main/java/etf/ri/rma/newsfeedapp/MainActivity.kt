@@ -33,18 +33,16 @@ class MainActivity : ComponentActivity() {
         val database = NewsDatabase.getDatabase(this)
         NewsRepository.initialize(database)
 
-        enableEdgeToEdge()
         setContent {
             NewsFeedAppTheme {
                 val navController = rememberNavController()
-                AppNavGraph(navController)
+                AppNavGraph(navController = navController, newsDatabase = database)
             }
         }
     }
 }
 @Composable
-fun AppNavGraph(navController: NavController) {
-
+fun AppNavGraph(navController: NavController, newsDatabase: NewsDatabase) {
     NavHost(navController = navController as NavHostController, startDestination = "/home") {
         composable("/home") {
             NewsFeedScreen(navController)
@@ -63,12 +61,13 @@ fun AppNavGraph(navController: NavController) {
 }
 
 
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
 NewsFeedAppTheme {
    // NewsFeedScreen("/home")
     val navController = rememberNavController()
-    AppNavGraph(navController)
+   // AppNavGraph(navController)
     }
 }

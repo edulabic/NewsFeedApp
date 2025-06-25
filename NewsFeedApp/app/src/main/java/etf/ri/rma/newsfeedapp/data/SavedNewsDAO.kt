@@ -74,6 +74,7 @@ interface SavedNewsDAO {
     @Transaction
     @Query("SELECT * FROM News")
     suspend fun getNewsWithTags(): List<NewsWithTags>
+
     fun NewsWithTags.toNewsItemWithTags(): NewsItem {
         return news.apply {
             imageTags = tags
